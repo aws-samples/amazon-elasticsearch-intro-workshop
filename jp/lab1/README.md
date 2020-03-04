@@ -4,7 +4,7 @@
 
 ![architecture](../images/architecture.png)
 
-このシステムでは，Kinesis Data Generator という JavaScript ベースのツールを用いて分析用のログを生成します．このツールでは，ログを送信するための認証/認可を，Amazon Cognito というサービスを用いて行います．その上で Generator から所定フォーマットのログを，Amazon Kinesis Firehose（以下 Firehose）というログ集約サービスに送ります．Firehose に送られたデータは，指定した間隔でデータをまとめて Amazon Elasticsearch Service（以下 Amazon ES）に書き込まれます．Amazon ES には Kibana と呼ばれる，ブラウザベースの可視化・分析ソフトウェアが同梱されています．この Kibana を用いて，ブラウザから実際にログの可視化・集計処理を行っていきます．
+このシステムでは，Kinesis Data Generator という JavaScript ベースのツールを用いて分析用のログを生成します．このツールでは，ログを送信するための認証/認可を，Amazon Cognito というサービスを用いて行います．その上で Generator から所定フォーマットのログを，Amazon Kinesis Firehose（以下 Firehose）というログ集約サービスに送ります．Firehose に送られたデータは，指定した間隔でデータをまとめて Amazon Elasticsearch Service（以下 Amazon ES）に書き込まれます．Amazon ES には Kibana と呼ばれる，ブラウザベースの可視化・分析ソフトウェアが同梱されています．この Kibana を用いて，ブラウザから実際にログの可視化・集計処理を行っていきます．また Amazon ES でデータの監視を行い，問題が起きた場合には，Amazon Simple Notification Service（以下 Amazon SNS）という通知サービスに対してアラートを飛ばします．
 
 ## Section 1: Amazon ES のドメイン作成
 
@@ -59,7 +59,7 @@
 
 ![architecture_kibana](../images/architecture_kibana.png)
 
-### Open Distro for Elasticsearch の権限モデル
+### Amazon ES の権限モデル
 
 Amazon ES では，オープンソースの Elasticsearch ディストリビューションである，Open Distro for Elasticsearch をベースとしています．Open Distro には独自の権限管理モデルがあり，Amazon ES でもこれを使用することができます．Open Distro の権限モデルは以下の通りで，Role と Role Mappings から構成されます．
 
@@ -71,7 +71,7 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 
 ![role_mappings](../images/role_mappings.png)
 
-### Open Distro ロールの作成
+### Amazon ES ロールの作成
 
 1. AWS マネジメントコンソールの画面左上にある [サービス] から **[Amazon ES]** のページを開いてください
 2. Amazon ES のダッシュボード画面上で，先ほど作成したドメイン **[workshop-esdomain]** をクリックします．ドメインの詳細が表示されたら，**"Kibana"** の横にある URL をクリックしてください．Kibana のログイン画面が表示されますので，Section 1 で指定したマスターユーザーとマスターパスワードを入力してください
@@ -94,7 +94,7 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 
 ## Section 4: Kinesis Data Generator のセットアップ
 
-最後に，Kinesis Data Generator のセットアップを行います．Kinesis Data Generator は，Kinesis に流し込むログを生成するためのウェブアプリケーションで，AWS により開発・公開されています．このツールについて詳しく知りたい方は，[こちらの解説記事](https://aws.amazon.com/jp/blogs/news/test-your-streaming-data-solution-with-the-new-amazon-kinesis-data-generator/)を参照ください．
+そして Kinesis Data Generator のセットアップを行います．Kinesis Data Generator は，Kinesis に流し込むログを生成するためのウェブアプリケーションで，AWS により開発・公開されています．このツールについて詳しく知りたい方は，[こちらの解説記事](https://aws.amazon.com/jp/blogs/news/test-your-streaming-data-solution-with-the-new-amazon-kinesis-data-generator/)を参照ください．
 
 ![architecture_generator](../images/architecture_generator.png)
 
@@ -144,6 +144,29 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
    ```
 
 7. 問題なければ，最後に **[Send data]** ボタンを押して，ログの送信を始めてください．ポップアップで表示される [Stop Sending Data to Kinesis を押すか，ブラウザタブを閉じるまで，Firehose に対してデータが送信され続けます
+
+## Section 5: Amazon SNS のトピック作成
+
+最後に，Amazon SNS のトピックと，通知する先のメール配信設定を作成します．
+
+![architecture_sns](../images/architecture_sns.png)
+
+### Amazon SNS のトピック作成
+
+SNS のトピックは，通知を管理する単位です．Lab 3 で Amazon ES からこのトピックに対してアラートの通知を送ります．
+
+1. AWS マネジメントコンソールの画面左上にある **[サービス]** から **[SNS]** のページを開いてください．画面左側のメニューアイコンを押して，トピックをクリックします．右側の **[トピックの作成]** ボタンを押して，トピック作成画面に進みます
+2. **"名前"** に **"amazon_es_alert"**，**"表示名"** も **"amazon_es_alert"** と入れて **[トピックの作成]** ボタンを押します
+
+### サブスクリプションの作成
+
+次にサブスクリプションを作成します．これはトピックを購読して，通知を受け取る先の設定を指します．ここでは，上で作成したトピックを購読する email を登録します．
+
+1. 左側メニューの **[サブスクリプション]** を押して，右側の **[サブスクリプションの作成]** ボタンを押します．トピック ARN から，先ほど作成したトピックを選択してください．プロトコルとして **[E メール]** を選択し，エンドポイントに，通知を受け取れるご自身のメールアドレスを入力してください
+2. 上記の設定が済んだら **[サブスクリプションの作成]** を押して作成を完了してください 
+3. 数分内に，入力したメールアドレス宛に Amazon SNS から "AWS Notification - Subscription Confirmation" というタイトルのメールが来ますので，メール本文にある **[Confirm subscription]** リンクをクリックして，設定を完了します
+
+以上で，Amazon SNS の設定は完了です．
 
 ## まとめ
 
