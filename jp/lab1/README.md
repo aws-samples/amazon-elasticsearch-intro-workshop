@@ -119,7 +119,7 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 
 5. その下の **"Record template"** で，**"Templete 1"** の下に書かれているサンプルフォーマットを消して，以下の内容をコピーして貼り付けてください．ここでは，IoT センサーから送信されるログを想定したフォーマットを指定します．乱数等を用いて，ダミーのログデータを自動生成してくれます
 
-   ```
+   ```json
    {
        "sensorId": {{random.number(50)}},
        "currentTemperature": {{random.number(
@@ -133,13 +133,13 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
            "weights": [0.90,0.02,0.08],
            "data": ["OK","FAIL","WARN"]
        })}}",
-       "timestamp": "{{date.now("YYYY/MM/DD HH:mm:ss")}}"
+       "timestamp": "{{date.utc("YYYY/MM/DD HH:mm:ss")}}"
    }
    ```
 
 6. 画面下側の [Test template] を押すと，実際に送信されるログのサンプルを確認することができます．以下のようなレコードが 5 つ生成されるのが確認できるかと思います
 
-   ```
+   ```json
    {    "sensorId": 42,    "currentTemperature": 38,    "ipaddress": "29.233.125.31",    "status": "OK",    "timestamp": "2020/03/03 12:49:12"}
    ```
 
