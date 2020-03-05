@@ -100,3 +100,52 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
 
 Amazon ES でできることは，ダッシュボードを用いて可視化するだけではありません．特定の数値が基準を超えた場合に，通知を飛ばして対応を促すと言ったこともできます．例えば機器ログの収集を行っている場合に，ステータスがエラーのログが一定数以上来たら，管理者にアラートメールを送るといったパターンが考えられます．そこでここでは，Lab 1 で設定した SNS トピックに対して，実際に通知を飛ばしてみたいと思います．
 
+Amazon ES におけるアラートの仕組みは以下の通りです．今回の例では，監視対象のメトリクスとしてログに含まれる FAIL ステータスの数を 1 分おきに監視します．そして 1 分間に FAIL ステータスを含んだログが 2 回以上得られたら，アクションとして SNS トピック経由でアラートメールを送信する，という流れになります．
+
+![alerm_flow](../images/alerm_flow.png)
+
+### Destination の設定
+
+まず最初に，アクションの送信先の設定を行います．ここでは，Lab 1 で作成した SNS トピックを送信先に指定します．
+
+1. 画面左側の![kibana_alerm](../images/kibana_alerm.png)マークをクリックして，Alerting のメニューを開きます
+2. メニューから **[Destinations]** タブを選択して，右側の **[Add destination]** ボタンを押します
+3. **"Name"** に **"Amazon ES alert topic"** と入力します．**"Type"** プルダウンから **[Amazon SNS]** を選択してください．**"Settings"** の **"SNS Topic ARN"** および **"IAM role ARN"** には，Lab 1 で作成した SNS トピックと IAM ロールの ARN を入れてください
+   - **SNS Topic ARN**: `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` のような文字列
+   - **IAM role ARN**: `arn:aws:iam::123456789012:role/amazones_sns_alert_policy`のような文字列
+4. **[Create]** ボタンを押します 
+
+### Monitor の設定
+
+次に Monitor 機能で監視対象のメトリクス，および頻度を設定します．ここでは送られてくるログの status フィールドの値が FAIL である回数を，1 分に 1 回カウントします．
+
+1. 画面左側の![kibana_alerm](../images/kibana_alerm.png)マークをクリックして，セキュリティ設定のメニューを開きます
+2. メニューから **[Monitors]** タブを選択して，右側の **[Create monitor]** ボタンを押します
+3. Monitor 作成画面が開いたら，**"Monitor name"** に **"FAIL status monitor"** と入力します．続けて **"Define monitor"** カテゴリの中で，**"Index"** のプルダウンから **[workshop-log]** を選択，**"Time field"** として **[timestamp]** を選びます．次に **"Create a monitor for"** のクエリを，`WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` とします．すべて設定すると以下のようになります
+   ![monitor_setting](../images/monitor_setting.png)
+4. **[Create]** ボタンを押して Monitor を作成します．Monitor を作成すると，そのまま Trigger の作成画面に遷移します
+
+### Trigger の設定
+
+続けて Trigger のセットアップを行なっていきましょう．ここでは，FAIL ステータスが 2 回以上あったらアラートをあげるとします．
+
+1. **"Trigger name"** に **"FAIL count trigger"** と入力します．**"Severity level"** は **[3]** にしておきましょう．**"Trigger condition"** を`IS ABOVE 1` とします．これにより，1 より上 = 2 回のアラートが上がった時に，トリガーが発動します
+2. 次に下側の **"Configure actions"** に進みます．**"Action name"** に **"Too many FAIL notification"** と入力します．"Destination" のプルダウンから，先ほど作成した **[Amazon ES alert topic - (Amazon SNS)]** を選択してください．**"Message subject"** は **"Too many FAIL record found"** としましょう
+3. **[Create]** ボタンを押して，Trigger を作成します
+
+以上で設定は完了です．
+
+### 結果の確認
+
+FAIL status monitor のページを開くと，History のところにアラートの履歴が表示されているのが確認できるでしょう．
+
+![alert_history_normal](../images/alert_history_normal.png)
+
+また数分間待つと，アラートメッセージが設定したメールアドレスに届くとともに，アラート履歴にも Triggered が表示されます．
+
+![alert_history_triggered](../images/alert_history_triggered.png)
+
+またアラートが上がると，**[Dashboard]** タブのリストにアラートが表示されるので，左側のチェックボックスを選択して，右の **[Acknowledge]** ボタンを押すことで，アラートを止めることができます
+
+
+
