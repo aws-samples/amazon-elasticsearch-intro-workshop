@@ -36,7 +36,7 @@ Elasticsearch では，index と呼ばれる単位でデータを管理し，そ
 それでは早速，Lab 1 で作成した index を読み取るための index pattern を作成していきましょう．
 
 1. 画面左側メニューの![kibana_management](../images/kibana_management.png)アイコンをクリックして，Management 画面を開き，左側の **[Index Patterns]** を選択します．続いて **[Create index patterns]** ボタンを押して，index pattern の作成画面を開いてください
-2. **"Step 1 of 2: Define index pattern"** の **"index pattern"** に "workshop-log" と入力して，**[ > Next step]** ボタンをクリックします．ここでは使用しませんが，このパターンにはワイルドカード（*）を用いて，複数の index を含めたデータセットを作ることもできます．例えば "workshop-log"，"workshop-user"，"workshop-item" といった複数の index がある場合，"workshop-\*" というパターンを指定することで，これらすべての index を検索対象にすることができます
+2. **"Step 1 of 2: Define index pattern"** の **"index pattern"** に **"workshop-log-\*"** と入力して，**[ > Next step]** ボタンをクリックします．ここで最後につけてある \* はワイルドカードと呼ばれるもので，複数の index をマッチさせるために使用できます．今回は 1 時間ごとにログがローテーションする設定にしていますので，"workshop-log-2020-04-01-09"，"workshop-log-2020-04-01-10"，"workshop-log-2020-04-01-11" と異なる名前の index が 1 時間ごとに生成されていきます．ワイルドカードを用いることで，この index pattern では，これらすべてを検索対象に含めるすることができます 
 3. **"Step 2 of 2: Configure settings"** で **"Time Filter field name"** のプルダウンメニューから **[timestamp]** を選択します．Kibana では，ストリームで流れてくるデータを時系列で並べて可視化するのが，非常に一般的なユースケースです．その際の時系列で集約するためのキーを，ここで指定しています．Lab 1 の Kinesis Data Generator で指定したログフォーマットに含まれている "timestamp" というフィールドが，Elasticsearch に自動で日付型データとして認識されています
 4. **[Create index pattern]** ボタンを押して，新しい index pattern を作成します
 
@@ -55,7 +55,7 @@ Elasticsearch では，index と呼ばれる単位でデータを管理し，そ
 ### Discover によるデータの可視化
 
 1. 画面左側メニューの![kibana_discover](../images/kibana_discover.png)アイコンをクリックして，Discover のページを開きます
-2. 画面左上にある Index pattern 選択のプルダウンメニューから，**[workshop-log]** を選びますそうすると棒グラフが表示され，その下に Document がズラッと並ぶのが確認できるかと思います．．また画面右上にある，検索対象時間を指定するメニューのカレンダーボタンをクリックして，**"Commonly used"** にある **[Today]** をクリックしてください．今日のログをすべて表示してくれます．ここの値をいじることで，表示・検索範囲を変更できます
+2. 画面左上にある Index pattern 選択のプルダウンメニューから，**[workshop-log-*]** を選びますそうすると棒グラフが表示され，その下に Document がズラッと並ぶのが確認できるかと思います．．また画面右上にある，検索対象時間を指定するメニューのカレンダーボタンをクリックして，**"Commonly used"** にある **[Today]** をクリックしてください．今日のログをすべて表示してくれます．ここの値をいじることで，表示・検索範囲を変更できます
 3. Document の中身をみてみると，Lab 1 で指定したテンプレートと同じ sensorId, currentTemperature, Ipaddress. starus, timestamp といったフィールドが，こちらにも表示されているのが見て取れるでしょう． さらに _id, _type, _index, _score といった指定していないフィールドもありますが，こちらは Elasticsearch が自動で追加するメタデータになります
    ![discover_document](../images/discover_document.png)
 4. 続いて，画面左上の検索フィールドに，`status:WARN` と入力して，右側の **[Update]** ボタンを押してください．ここで入力した内容がフィルター条件として機能することで，画面に表示される Document が WARN ステータスのものだけになり，かつ FAIL にハイライトがかかって表示されます．また同様に，`status:FAIL|WARN` と入力することで，FAIL または WARN の Document が表示されます
@@ -72,7 +72,7 @@ Elasticsearch では，index と呼ばれる単位でデータを管理し，そ
 
 ここではまず，全レコードに占める OK, WARN, FAIL の各ステータスの割合を可視化するために，円グラフを作成してみます．
 
-1. 画面左側メニューの ![kibana_visualize](../images/kibana_visualize.png) アイコンをクリックして，Visualize のページを開きます．続いて **[ + Create a visualization]** ボタンを押して，グラフ作成画面に進みます．ポップアップから **[Pie]** を選択してください．続いてデータソースの選択画面に移るので，**[workshop-log]** を選ぶことで，グラフ作成画面が開きます
+1. 画面左側メニューの ![kibana_visualize](../images/kibana_visualize.png) アイコンをクリックして，Visualize のページを開きます．続いて **[ + Create a visualization]** ボタンを押して，グラフ作成画面に進みます．ポップアップから **[Pie]** を選択してください．続いてデータソースの選択画面に移るので，**[workshop-log-*]** を選ぶことで，グラフ作成画面が開きます
 2. 画面左のメニューで，**"Metrics"** を確認します．ここで **[Y-Axis]** に **"Count"** と表示されているのが見て取れるでしょう．これは，グラフの集計対象がレコード数ということを表しています．**[Y-Axis]** をクリックして詳細メニューを表示することで集計対象を変えることができます．ここではレコード数が対象のままで良いため，何もする必要はありません
 3. 続いて **"Buckets"** に進みます．ここで 2 つのメニューがありますが，ここでは **[Split Series]** を選択します．これは一つのグラフの中に，集計軸を追加するものです．なお **[Split Chart]** を選択した場合は，選択したメトリクスのカテゴリ数分だけグラフが作成されます
 4. ここではステータスを集計軸に加えたいので，その手順をみていきます．**"Aggregation"** で **[Terms]** を選択します．ステータスのようなカテゴリ型のフィールドの場合，通常この Terms を使用して軸の追加を行います．その上で **"Field"** で **[status.keyword]** を追加します
@@ -120,7 +120,7 @@ GET /workgroup-log/_search
 
 今度は時系列グラフを作成してみたいと思います．センサーの温度で複数グループに分割して，それぞれの異常ステータス数を可視化してみましょう．
 
-1. 画面左側メニューの ![kibana_visualize](../images/kibana_visualize.png) アイコンをクリックして，Visualize のページを開きます．続いて画面右上側の **[ + ]** ボタンを押して，グラフ作成画面に進みます．ポップアップから **[Area]** を選択してください．続いてデータソースの選択画面に移るので，**[workshop-log]** を選ぶことで，グラフ作成画面が開きます
+1. 画面左側メニューの ![kibana_visualize](../images/kibana_visualize.png) アイコンをクリックして，Visualize のページを開きます．続いて画面右上側の **[ + ]** ボタンを押して，グラフ作成画面に進みます．ポップアップから **[Area]** を選択してください．続いてデータソースの選択画面に移るので，**[workshop-log-*]** を選ぶことで，グラフ作成画面が開きます
 2. 画面左上の **"Filters"** に `status:WARN|FAIL` と入力します．次にその右の時間範囲を指定するフィールドの左側をクリックして，**[Relative]** タブを押して，**[1]** **[Hours ago]** と選択します．これにより画面に表示させる時間帯を変更することができます．変更を反映するために，画面右側の **[Update]** を押してください．これでステータスが正常でないレコードに絞った集計を行うことができます
 3. 次に **"Bucket"** で **[X-Axis]** を選択し，**"Aggregation"** から **[Date Histogram]** を選びます．これにより X 軸，つまり横軸に時系列の情報が追加されます．左側メニュー上にある **[▷]** ボタンを押すことで，変更が反映され，以下のようなグラフが表示されるかと思います
    ![visualize_areachart_simple](../images/visualize_areachart_simple.png)
@@ -133,7 +133,7 @@ GET /workgroup-log/_search
 
 同様に，ダッシュボードで定常的に確認するためのグラフをいくつか作成しておきましょう．まずIP レンジを Private IP 帯とそれ以外に分けて，それぞれのセンサーから得られる温度について，平均値の時系列変化を確認できるようにしましょう．
 
-1. 画面左側メニューの ![kibana_visualize](../images/kibana_visualize.png) アイコンをクリックして，Visualize のページを開きます．続いて画面右上側の **[ + ]** ボタンを押して，グラフ作成画面に進みます．ポップアップから **[Line]** を選択してください．続いてデータソースの選択画面に移るので，**[workshop-log]** を選ぶことで，グラフ作成画面が開きます
+1. 画面左側メニューの ![kibana_visualize](../images/kibana_visualize.png) アイコンをクリックして，Visualize のページを開きます．続いて画面右上側の **[ + ]** ボタンを押して，グラフ作成画面に進みます．ポップアップから **[Line]** を選択してください．続いてデータソースの選択画面に移るので，**[workshop-log-*]** を選ぶことで，グラフ作成画面が開きます
 2. **"Metrics"** の **[Y-Axis]** を押して詳細を開き，**"Aggregation"** から **[Average]** を選択します．続いてその下の **"Field"** で **[currentTemperature]** を選んでください
 3. 次に **"Buckets"** から **"X-Axis"** を選択して，**"Aggregation"** から **[Date Histogram]** を選びます．これにより X 軸に時系列の情報が追加されます
 4. 左側メニュー下にある **[Add sub-buckets]** ボタンを押して，追加の軸を設定します．**[Split Series]** を選択して，**"Sub Aggregation"** から **[Filters]** を選択します．ここではプライベート IP レンジとして，一般的に使われている 10.0.0.0-10.255.255.255 および 192.168.0.0-192.168.255.255 を用いているとして，**"Flter 1"** に`ipaddress:10.* or ipaddress:192.168.* `  と入力し，入力欄右上のタグのようなボタンをクリックします．そうすると **"Filter 1 label"** が表示されるので，**"Private IP"** と入力します．同様に [Add Filter] を押して，**"Flter 2"** に`* `  と入力します．左側メニュー上にある **[▷]** ボタンを押すことで，以下のように変更が反映されます

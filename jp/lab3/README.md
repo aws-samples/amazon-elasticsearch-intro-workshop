@@ -1,6 +1,6 @@
 # Lab 3: Amazon ES の運用管理
 
-前の Lab ではビジュアルの作成や分析といった，Kibana の基本的な使い方を実際に試してきました．この Lab では，権限管理やアラートといった，運用管理に関する事柄について，実際に手を動かして試していただきます．
+前の Lab ではビジュアルの作成や分析といった，Kibana の基本的な使い方を実際に試してきました．この Lab では，権限管理やアラート，index 管理といった，運用管理に関する事柄について，実際に手を動かして試していただきます．
 
 ## Section 1: Amazon ES の権限管理
 
@@ -34,7 +34,7 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
 1. 画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開きます
 2. **"Permissions and Roles"** の下にある **[Roles]** をクリックして，ロール管理画面に進んだら，画面右側の **[+]** ボタンをクリックして新規ロール作成メニューを開いてください
 3. **"Role name"** に **"iot_developer_role"** と入力します
-4. 続いて上側の **[index Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add index permissions]** ボタンを押します．**"Index patterns"** に **"workshop-log"** と入力します．またその下の **Permissions: Action Groups** で **[crud]** を選択してください
+4. 続いて上側の **[index Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add index permissions]** ボタンを押します．**"Index patterns"** に **"workshop-log-*"** と入力します．またその下の **Permissions: Action Groups** で **[crud]** を選択してください
 5. さらに右上の **[Tenant Permissions]** タブを選択して，**[Add tenant permissions]** を押します．"**Tenant patterns**" に **"IoT"** と入力してください．また **"Permissions"** のプルダウンから **[kibana_all_write]** を選択します．あとは **[Save Role Defintion]** ボタンを押して，ロール作成完了です
 
 同様に，閲覧者用のロールも作成しましょう．
@@ -43,7 +43,7 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
 
 2. **"Role name"** に **"iot_reader_role"** と入力します
 
-3. 上側の **[index Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add index permissions]** ボタンを押します．**"Index patterns"** に **"workshop-log"** と入力します．その下の **"Permissions: Action Groups"** で **[read]** を選択してください．次の **"Document Level Security Query"** は，以下のような文字列を入力してください．これは workshop-log データのうち，status フィールドが OK のものだけを表示させるようにするための，Elasticsearch クエリです．最後に **"Anonymized fields"** に **"ipaddress"** と入力します．以下に示すような設定結果になります
+3. 上側の **[index Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add index permissions]** ボタンを押します．**"Index patterns"** に **"workshop-log-*"** と入力します．その下の **"Permissions: Action Groups"** で **[read]** を選択してください．次の **"Document Level Security Query"** は，以下のような文字列を入力してください．これは workshop-log データのうち，status フィールドが OK のものだけを表示させるようにするための，Elasticsearch クエリです．最後に **"Anonymized fields"** に **"ipaddress"** と入力します．以下に示すような設定結果になります
 
    ```json
    {
@@ -121,7 +121,7 @@ Amazon ES におけるアラートの仕組みは以下の通りです．今回�
 
 1. 画面左側の![kibana_alerm](../images/kibana_alerm.png)マークをクリックして，セキュリティ設定のメニューを開きます
 2. メニューから **[Monitors]** タブを選択して，右側の **[Create monitor]** ボタンを押します
-3. Monitor 作成画面が開いたら，**"Monitor name"** に **"FAIL status monitor"** と入力します．続けて **"Define monitor"** カテゴリの中で，**"Index"** のプルダウンから **[workshop-log]** を選択，**"Time field"** として **[timestamp]** を選びます．次に **"Create a monitor for"** のクエリを，`WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` とします．すべて設定すると以下のようになります
+3. Monitor 作成画面が開いたら，**"Monitor name"** に **"FAIL status monitor"** と入力します．続けて **"Define monitor"** カテゴリの中で，**"Index"** に **"workshop-log-*** と入力，**"Time field"** として **[timestamp]** を選びます．次に **"Create a monitor for"** のクエリを，`WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` とします．すべて設定すると以下のようになります
    ![monitor_setting](../images/monitor_setting.png)
 4. **[Create]** ボタンを押して Monitor を作成します．Monitor を作成すると，そのまま Trigger の作成画面に遷移します
 
@@ -146,3 +146,139 @@ FAIL status monitor のページを開くと，History のところにアラー�
 ![alert_history_triggered](../images/alert_history_triggered.png)
 
 またアラートが上がると，**[Dashboard]** タブのリストにアラートが表示されるので，左側のチェックボックスを選択して，右の **[Acknowledge]** ボタンを押すことで，アラートを止めることができます．ただ，同様の状況が発生するとまた新たなアラートが上がってきてしまい，メールも送られ続けるため，確認が終わったら **[Monitors]** タブから，作成した Monitor のチェックボックスを選択して，**[Actions]** ボタンの **[Disable]** をクリックしてください
+
+## Section 3: index の管理
+
+Lab 1 と 2 で説明したように，Amazon ES のデータは基本的に index という単位で管理されます．このワークショップでは，Firehose からログを挿入する際に，格納先の index 名を定期的に新しいものにしていくやり方をとっています．Lab 2 で実施してきたようなログ分析のユースケースでは，通常最近のデータは頻繁に処理対象になりますが，一定の時間が経ったデータは滅多にアクセスされなくなるのが一般的です．
+
+今回のように 1 時間ごとに新しい index が作成される場合，滅多にアクセスされない大量の古い index を保存するために，大きなディスク容量が必要となってしまいます．そこで古い index を自動で削除できるように設定したいと考えるのは自然でしょう．また大量のアクセスがあった場合に，index サイズが膨れ上がってしまい，分析のパフォーマンスに影響を及ぼすことも考えられます．その場合，一定サイズを超えたら新しい index を自動的に作成して，そちらに書き込みを行えると，Amazon ES を安定して運用できるでしょう．
+
+このような index 管理を可能とする機能として，Amazon ES には Index State Management という’機能があります．ここでは，新しい index が生成されてから 7 日間経ったら，自動でログを削除するような設定を適用したいと思います．
+
+### Index policy の作成
+
+index の運用ルールを記述した JSON 形式の設定ファイルを，Amazon ES では，index policy と呼びます．index 作成が行われたから 7 日間経過したら，index を自動で削除する index policy を作成していきます．
+
+1. 画面左側の![kibana_index_management](../images/kibana_index_management.png)マークをクリックして，Index Management のメニューを開きます
+
+2. 左側メニューの **[index policies]** のメニューを選択した状態で，右の **[Create policy]** ボタンを押します
+
+3. **”Policy ID"** に **"delete_after_1week"** と入力してください
+
+4. すでにデフォルトのポリシーが記述されていますが，今回はこれを使いません．以下の内容をコピーして，**"Define policy"** に貼り付けてください．シンプルな記述なので，みていただければ意味は大体理解できるかと思います
+
+   ```json
+   {
+       "policy": {
+           "description": "Delete index 1 week after.",
+           "default_state": "live",
+           "states": [
+               {
+                   "name": "live",
+                   "actions": [
+                       {
+                           "read_write": {}
+                       }
+                   ],
+                   "transitions": [
+                       {
+                           "state_name": "delete",
+                           "conditions": {
+                               "min_index_age": "7d"
+                           }
+                       }
+                   ]
+               },
+               {
+                   "name": "delete",
+                   "actions": [
+                       {
+                           "delete": {}
+                       }
+                   ],
+                   "transitions": []
+               }
+           ]
+       }
+   }
+   ```
+
+5. **[Create]** ボタンを押して，ポリシーを作成します
+
+### Index policy を既存の index に適用
+
+作成したポリシーを実際に既存の index に適用しましょう．
+
+1. 左側メニューで **"Indices"** を選択します．index の一覧から，**[workshop-log-2020-04-01-09]** のような（日付部分は，ワークショップの実施時間に合わせた異なる値が入ります）index について，左側チェックボックスを選択してから左上の **[Apply policy]** ボタンを押します
+2. ポップアップが出たら，先ほど作成した **"delete_after_1week"** を選択して，**[Apply]** ボタンを押します
+3. 左側メニューの **[Managed Indices]** を選択すると，index に ポリシーが適用されているのが確認できるかと思います
+
+### Index policy を今後作成される index に適用
+
+上で試したやり方だと，既存の index に対してポリシーを適用することはできますが，今後新しく作られるポリシーに対しての設定をあらかじめ行うことはできません．index が作られるごとに毎回手動でこの設定を行うのは面倒なので，ポリシーが自動適用されるように設定を変更しましょう
+
+この設定を適用するためには，Elasticsearch の API を直接叩く必要があります．そこで API を叩くための Dev Tools と呼ばれる UI を使用します．
+
+1. 画面左側の![kibana_devtools](../images/kibana_devtools.png)マークをクリックして，Dev tools のメニューを開きます
+
+2. 下の **"Console"** にあらかじめ書かれている内容をそのまま残しておいて，1 行空けてその下に，以下の内容をコピーしてください．これは，**"workshop-log-*"** に適合するすべての index に対して，作成時に自動で **"delete_after_1week"** ポリシーを適用する，というものです
+
+   ```json
+   PUT _template/index_policy_templete
+   {
+     "index_patterns": ["workshop-log-*"], 
+     "settings": {
+       "opendistro.index_state_management.policy_id":  "delete_after_1week" 
+     }
+   }
+   ```
+
+3. コピーしたコマンドの右側に表示される ▶︎ ボタンを押して，API を実行してください，以下のような結果が右側の画面に表示されたら成功です
+
+   ```json
+   {
+     "acknowledged" : true
+   }
+   ```
+
+   ![console_put_templete](../images/console_put_templete.png)
+
+4. 新しい index は 1 時間に一度しか作られないため，ここでは手動で新しい index を作成してみましょう．**"Console"** の内容をそのままに，1 行空けて次の内容をコピーし， ▶︎ ボタンを押してください
+
+   ```json
+   PUT workshop-log-policy-test/1
+   {
+     "id": "test"
+   }
+   ```
+
+5. 次のような内容が表示されれば，無事新しい index が作成されました
+
+   ```json
+   {
+     "_index" : "workshop-log-policy-test",
+     "_type" : "1",
+     "_id" : "Hsi7qnABvXnwMeRuRS2W",
+     "_version" : 1,
+     "result" : "created",
+     "_shards" : {
+       "total" : 2,
+       "successful" : 1,
+       "failed" : 0
+     },
+     "_seq_no" : 0,
+     "_primary_term" : 1
+   }
+   
+   ```
+
+6. 実際に新しい index にポリシーが適用されてるか確認するため，画面左側の![kibana_index_management](../images/kibana_index_management.png)マークをクリックして，Index Management のメニューを開いてください
+
+7. 左側メニューの **[Managed Indices]** を選択すると，以下のように今作成した index に対して policy が適用され，Initializing ステータスであることが確認できるかと思います．以後新しく作られる，**"workshop-log-*"** 形式の index には，このポリシーが適用されます
+   ![index_auto_policy_attachment](../images/index_auto_policy_attachment.png)
+
+以上で index の管理の説明は終わりです．今回は非常に簡単なポリシーを試しましたが，実際にはもっと幅広いポリシーを設定することが可能です．詳細は[こちら](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/ism.html)をご確認ください
+
+## まとめ
+
+Lab 3 では，Amazon ES の運用管理に関わるさまざまな機能について，実際に試してきました．非常に多くのことを簡単に管理できることが帆理解いただけたかと思います．それでは次の [Lab 4](../lab4/README.md) で，より高度な Amazon ES の使い方についてみていきましょう
