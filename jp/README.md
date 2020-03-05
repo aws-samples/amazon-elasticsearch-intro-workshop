@@ -24,8 +24,8 @@ Amaon Elasticsearch Service（Amazon ES）は，オープンソースの全文�
 ワークショップは，以下の 4 つの Lab から構成されています．下記リンクを辿って，Lab 1 から順番に進めていってください．またワークショップを終える前に，かならず後片付けを行なってください．そうしない場合には，継続的な課金が発生してしまいます．
 
 - [Lab 1](lab1/README.md): 環境のセットアップ
-- [Lab 2](lab2/README.md): Amazon ES + Kibana を用いたストリームデータの可視化
-- [Lab 3](lab3/README.md): Kibana 上での詳細な権限管理
+- [Lab 2](lab2/README.md): Kibana での可視化と分析
+- [Lab 3](lab3/README.md): Amazon ES の運用管理
 - [Lab 4](lab4/README.md): 日本語文書の全文検索
 
 ## ハンズオン全体を通しての注意事項
