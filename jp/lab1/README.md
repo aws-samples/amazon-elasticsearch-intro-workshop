@@ -25,11 +25,15 @@
 
 ### 解説: Amazon ES について
 
-**TODO: もう少し説明充実させる**
+今回のハンズオンでは，あくまでお試しということで 1 台だけで Elasticsearch を立てています．ですが本来，Elasticsearch は複数台のマシンでクラスターを組むことで，大規模データを扱ったり，高い可用性を得たりできるものです．そこで本番運用する際の Amazon ES では，クラスターの管理を行う専用のマスターノードを複数台，また実際のデータを格納するデータノードも複数台用意します．
 
-今回のハンズオンでは，あくまでお試しということで 1 台だけで Elasticsearch を立てています．ですが本来，Elasticsearch は複数台のマシンでクラスターを組むことで，大規模データを扱ったり，高い可用性を得たりできるものです．そこで本番運用する際の Amazon ES では，クラスターの管理を行うマスターノードを複数台，また実際のデータを格納するデータノードも複数台用意します．
+Amazon ES における典型的な Easticsearch クラスターの構成は，以下のものになります．AWS リージョンにある 3 つの Availability Zone（以下 AZ）にノードを分散させて，どこかひとつの AZ で障害が起こっても，クラスターを動かし続けられるような，可用性の高い形になります．自分で EC2 上に，このような構成の Elasticsearch クラスターを立てたり，ソフトウェアのバージョンアップや設定の変更を行ったりするのは，非常に骨が折れる作業です．Amazon ES を用いることで，このような構成をわずか数クリックで立ち上げることができるようになります．
+
+![amazones_high_availability](../images/amazones_high_availability.png)
 
 マスターノードはデータノードと同居させることもできますが，大規模なクラスターや負荷の高いワークロードの場合は，クラスター管理だけを行う専用のマスターノードを用意するのが推奨です．またマスターノードについては，3 台以上の奇数で設定することが推奨されています．Amazon ES では 3 または 5 台を選択することができます．なぜ偶数ではダメなのか，についての詳細については[公式ドキュメント](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/es-managedomains-dedicatedmasternodes.html) をご覧ください．
+
+
 
 ## Section 2: Firehose のストリーム作成
 
@@ -52,7 +56,40 @@
 
 ### 解説
 
-**TODO: IAM ロールについて軽く説明**
+IAM とは，Identity and Access Management の略で，AWS サービス・リソースへのアクセス権限管理を行うためのサービスです．以下のようなフォーマットで書かれるものです．この場合 EC2 のインスタンスを作成すること，また S3 の my-bucket というバケットに対して，中にあるオブジェクトをリストしたり，読み書きしたりすることができます．このような権限セットをポリシーと呼びます．上の Firehose 手順でいうと，Firehose のストリームが S3 バケットにエラーデータを書き込んだり，Amazon ES にデータを挿入できるようにする必要があります．
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:RunInstances",
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::my-bucket",
+                "arn:aws:s3:::my-bucket/*"
+            ]
+        }
+    ]
+}
+```
+
+このポリシーを複数アタッチした IAM ロールというものを作成し，Firehose がこの IAM ロールを使って各サービスにアクセスできるようにする，といった流れになります．これらを図にまとめたものが以下のようになります
+
+![iam_role](../images/iam_role.png)
 
 ## Section 3: Amazon ES の権限設定
 
