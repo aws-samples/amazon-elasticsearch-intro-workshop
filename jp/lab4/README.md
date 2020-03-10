@@ -39,66 +39,66 @@ TBW
    """
    }
    ```
-   1. これを実行すると，以下のような結果が得られるでしょう（実際の集計結果は，実行環境ごとに異なった値となる点にご注意ください）．"aggregations" 以下に集計結果が表示されているのがみて取れるかと思います
+3. これを実行すると，以下のような結果が得られるでしょう（実際の集計結果は，実行環境ごとに異なった値となる点にご注意ください）．"aggregations" 以下に集計結果が表示されているのがみて取れるかと思います
 
-      ```json
-      {
-        "took" : 12,
-        "timed_out" : false,
-        "_shards" : {
-          "total" : 35,
-          "successful" : 35,
-          "skipped" : 0,
-          "failed" : 0
-        },
-        "hits" : {
-          "total" : {
-            "value" : 10000,
-            "relation" : "gte"
-          },
-          "max_score" : null,
-          "hits" : [ ]
-        },
-        "aggregations" : {
-          "status.keyword" : {
-            "doc_count_error_upper_bound" : 0,
-            "sum_other_doc_count" : 0,
-            "buckets" : [
-              {
-                "key" : "OK",
-                "doc_count" : 96930,
-                "cnt" : {
-                  "value" : 96930
-                },
-                "avgTemperature" : {
-                  "value" : 79.99918497885072
-                }
-              },
-              {
-                "key" : "WARN",
-                "doc_count" : 8595,
-                "cnt" : {
-                  "value" : 8595
-                },
-                "avgTemperature" : {
-                  "value" : 79.84409540430482
-                }
-              },
-              {
-                "key" : "FAIL",
-                "doc_count" : 2162,
-                "cnt" : {
-                  "value" : 2162
-                },
-                "avgTemperature" : {
-                  "value" : 80.45189639222941
-                }
-              }
-            ]
-          }
-        }
-      }
-      ```
+   ```json
+   {
+     "took" : 12,
+     "timed_out" : false,
+     "_shards" : {
+       "total" : 35,
+       "successful" : 35,
+       "skipped" : 0,
+       "failed" : 0
+     },
+     "hits" : {
+       "total" : {
+         "value" : 10000,
+         "relation" : "gte"
+       },
+       "max_score" : null,
+       "hits" : [ ]
+     },
+     "aggregations" : {
+       "status.keyword" : {
+         "doc_count_error_upper_bound" : 0,
+         "sum_other_doc_count" : 0,
+         "buckets" : [
+           {
+             "key" : "OK",
+             "doc_count" : 96930,
+             "cnt" : {
+               "value" : 96930
+             },
+             "avgTemperature" : {
+               "value" : 79.99918497885072
+             }
+           },
+           {
+             "key" : "WARN",
+             "doc_count" : 8595,
+             "cnt" : {
+               "value" : 8595
+             },
+             "avgTemperature" : {
+               "value" : 79.84409540430482
+             }
+           },
+           {
+             "key" : "FAIL",
+             "doc_count" : 2162,
+             "cnt" : {
+               "value" : 2162
+             },
+             "avgTemperature" : {
+               "value" : 80.45189639222941
+             }
+           }
+         ]
+       }
+     }
+   }
+   ```
 
 4. 今度はクエリだけではなく，集計結果も SQL の実行結果のような形で表示してみましょう．以下のように `format=csv` というクエリパラメタをつけた形で同じクエリを実行します
 
