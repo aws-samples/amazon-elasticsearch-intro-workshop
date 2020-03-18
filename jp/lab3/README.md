@@ -74,7 +74,7 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
 1. セキュリティ設定のトップ画面から **[Role Mappings]** ボタンを押します．
 2. 画面右上の **[+]** ボタンを押したら，**"Role"** のプルダウンメニューから，**[iot_developer_role]** を選択します．続いて **"Users"** に先ほど作成したユーザーの名前，**"iot_developer"** を入力してください．最後に **[Submit]** を押して紐付け完了です
 3. 閲覧者についても同様に，画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[iot_reader_role]** を選択します．続いて **"Users"** に**"iot_reader"** を入力して **[Submit]** を押して，紐付けを終わらせてください
-4. さらに Kibana UI を使用するために，Amazon ES 側で事前に定義されている kibana_user ロールを，開発者と閲覧者の両方に付与する必要があります．画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[kibana_user]** を選択します．続いて **"Users"** に**"iot_reader"** を入力し， **[+ Add User]** ボタンを押して **"iot_reader"** も追加したら，**[Submit]** を押します
+4. さらに Kibana UI を使用するために，Amazon ES 側で事前に定義されている kibana_user ロールを，開発者と閲覧者の両方に付与する必要があります．画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[kibana_user]** を選択します．続いて **"Users"** に**"iot_developer"** を入力し， **[+ Add User]** ボタンを押して **"iot_reader"** も追加したら，**[Submit]** を押します
 
 以上でテナントの作成，ロールとユーザーの作成，紐付けまで完了しました．それでは実際に，作成したユーザーでログインしてみて，想定した通りの権限が許可されているかを確認してみましょう
 
@@ -95,6 +95,8 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
    ![document_anonymized](../images/document_anonymized.png)
 4. また，Dashoboards ページを開くと，以下のように "Percentage of Status" が OK のものしかないのがみて取れるかと思います．これも status カラムが OK のもののみを閲覧可能とするように設定していたためです．また IP アドレスがハッシュ化されているため，Private IP とそれ以外の時系列推移も，グラフが表示されていません
    ![dashboard_filtered](../images/dashboard_filtered.png)
+
+ここまでの確認が完了したら，iot_reader からログアウトして，**再度 awsuser で Kibana にログインし直して**ください．Section 2 以降を進めるために必須となります．
 
 ## Section 2: Amazon SNS へのアラートの送信
 
@@ -130,8 +132,20 @@ Amazon ES におけるアラートの仕組みは以下の通りです．今回�
 続けて Trigger のセットアップを行なっていきましょう．ここでは，FAIL ステータスが 2 回以上あったらアラートをあげるとします．
 
 1. **"Trigger name"** に **"FAIL count trigger"** と入力します．**"Severity level"** は **[3]** にしておきましょう．**"Trigger condition"** を`IS ABOVE 1` とします．これにより，1 より上 = 2 回のアラートが上がった時に，トリガーが発動します
-2. 次に下側の **"Configure actions"** に進みます．**"Action name"** に **"Too many FAIL notification"** と入力します．"Destination" のプルダウンから，先ほど作成した **[Amazon ES alert topic - (Amazon SNS)]** を選択してください．**"Message subject"** は **"Too many FAIL record found"** としましょう
-3. **[Create]** ボタンを押して，Trigger を作成します
+
+2. 次に下側の **"Configure actions"** に進みます．**"Action name"** に **"Too many FAIL notification"** と入力します．"Destination" のプルダウンから，先ほど作成した **[Amazon ES alert topic - (Amazon SNS)]** を選択してください．**"Message subject"** は **"FAIL ステータスのレコード数が閾値を超えました"** としましょう
+
+3. "Message" は，最初かあるメッセージを消して，以下の内容に置き換えてください
+
+   ```
+   監視項目 {{ctx.monitor.name}} でアラートが検出されました．状況を確認してください．
+   - トリガー: {{ctx.trigger.name}}
+   - 緊急度: {{ctx.trigger.severity}}
+   - 集計開始時刻: {{ctx.periodStart}}
+   - 集計終了時刻: {{ctx.periodEnd}}
+   ```
+
+4. **[Create]** ボタンを押して，Trigger を作成します
 
 以上で設定は完了です．
 
@@ -246,7 +260,7 @@ index の運用ルールを記述した JSON 形式の設定ファイルを，Am
 4. 新しい index は 1 時間に一度しか作られないため，ここでは手動で新しい index を作成してみましょう．**"Console"** の内容をそのままに，1 行空けて次の内容をコピーし， ▶︎ ボタンを押してください
 
    ```json
-   PUT workshop-log-policy-test/1
+   POST workshop-log-policy-test/1
    {
      "id": "test"
    }

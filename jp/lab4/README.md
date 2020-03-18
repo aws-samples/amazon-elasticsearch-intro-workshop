@@ -32,9 +32,9 @@
 
    ```
    POST jpdocs/_bulk
-   {"index":{"_index":"search-jp","_type":"_doc"}}
+   {"index":{"_index":"jpdocs","_type":"_doc"}}
    {"content":"近所の地銀に口座を持っている"}
-   {"index":{"_index":"search-jp","_type":"_doc"}}
+   {"index":{"_index":"jpdocs","_type":"_doc"}}
    {"content":"築地銀だこにはしょっちゅう行く"}
    ```
 
@@ -201,7 +201,7 @@
    DELETE jpdocs
    ```
 
-2. 続いて新しい index を作成します．今度は，あらかじめ定義された kuromoji analyzer ではなく，これをカスタマイズしたものを使用します．先ほど "kuromoji" と書かれていた analyzer の値が，今度は "my_analyzer" tなっています．この "my_analyzer" の設定が，その下の "settings" 以下に書かれているものです．その中に，`"user_dictionary_rules": ["築地銀だこ,築地 銀だこ,ツキジ ギンダコ,カスタム名詞"]` と書かれているのが，新しく追加されたユーザー辞書です．ここでは "築地銀だこ" が "築地" と "銀だこ" の 2 単語に分割されるように指定しました
+2. 続いて新しい index を作成します．今度は，あらかじめ定義された kuromoji analyzer ではなく，これをカスタマイズしたものを使用します．先ほど "kuromoji" と書かれていた analyzer の値が，今度は "my_analyzer" となっています．この "my_analyzer" の設定が，その下の "settings" 以下に書かれているものです．その中に，`"user_dictionary_rules": ["築地銀だこ,築地 銀だこ,ツキジ ギンダコ,カスタム名詞"]` と書かれているのが，新しく追加されたユーザー辞書です．ここでは "築地銀だこ" が "築地" と "銀だこ" の 2 単語に分割されるように指定しました
 
    ```json
    PUT jpdocs
@@ -521,20 +521,20 @@
 
 1. 画面左側の![kibana_devtools](../images/kibana_devtools.png)マークをクリックして，Dev tools のメニューを開きます
 
-2. 下の **"Console"** に以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．これは，**"workshop-log-*"** に適合するすべての index に対して，status ごとのレコード数と平均気温を集計するというものです
+2. 下の **"Console"** に以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．これは，**"workshop-log-*"** に適合するすべての index に対して，status ごとのレコード数と平均気温を集計するというものです．Lab 2 の Section 2 で解説したように，グルーピング処理を行う場合は keyword 型のフィールドを使用する必要がありますので，ここでは status.keyword を用いています
 
    ```json
    POST _opendistro/_sql
    {
      "query": """
    select
-     status
+     status.keyword
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
      workshop-log*
    group by
-     status
+     status.keyword
    """
    }
    ```
@@ -542,63 +542,45 @@
 
    ```json
    {
-     "took" : 12,
-     "timed_out" : false,
-     "_shards" : {
-       "total" : 35,
-       "successful" : 35,
-       "skipped" : 0,
-       "failed" : 0
-     },
-     "hits" : {
-       "total" : {
-         "value" : 10000,
-         "relation" : "gte"
+     "schema": [
+       {
+         "name": "status.keyword",
+         "type": "double"
        },
-       "max_score" : null,
-       "hits" : [ ]
-     },
-     "aggregations" : {
-       "status.keyword" : {
-         "doc_count_error_upper_bound" : 0,
-         "sum_other_doc_count" : 0,
-         "buckets" : [
-           {
-             "key" : "OK",
-             "doc_count" : 96930,
-             "cnt" : {
-               "value" : 96930
-             },
-             "avgTemperature" : {
-               "value" : 79.99918497885072
-             }
-           },
-           {
-             "key" : "WARN",
-             "doc_count" : 8595,
-             "cnt" : {
-               "value" : 8595
-             },
-             "avgTemperature" : {
-               "value" : 79.84409540430482
-             }
-           },
-           {
-             "key" : "FAIL",
-             "doc_count" : 2162,
-             "cnt" : {
-               "value" : 2162
-             },
-             "avgTemperature" : {
-               "value" : 80.45189639222941
-             }
-           }
-         ]
+       {
+         "name": "cnt",
+         "alias": "cnt",
+         "type": "double"
+       },
+       {
+         "name": "avgTemperature",
+         "alias": "avgTemperature",
+         "type": "double"
        }
-     }
+     ],
+     "total": 3,
+     "datarows": [
+       [
+         "OK",
+         86425,
+         79.99312698871854
+       ],
+       [
+         "WARN",
+         7673,
+         79.42864590121204
+       ],
+       [
+         "FAIL",
+         1940,
+         80.93762886597938
+       ]
+     ],
+     "size": 3,
+     "status": 200
    }
    ```
-
+   
 4. 今度はクエリだけではなく，集計結果も SQL の実行結果のような形で表示してみましょう．以下のように `format=csv` というクエリパラメタをつけた形で同じクエリを実行します
 
    ```json
@@ -606,13 +588,13 @@
    {
      "query": """
    select
-     status
+     status.keyword
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
      workshop-log*
    group by
-     status
+     status.keyword
    """
    }
    ```
@@ -637,13 +619,13 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
    {
      "query": """
    select
-     status
+     status.keyword
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
      workshop-log*
    group by
-     status
+     status.keyword
    """
    }
    ```
@@ -656,15 +638,15 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
      "size" : 0,
      "_source" : {
        "includes" : [
-         "status",
+         "status.keyword",
          "COUNT",
          "AVG"
        ],
        "excludes" : [ ]
      },
-     "stored_fields" : "status",
+     "stored_fields" : "status.keyword",
      "aggregations" : {
-       "status.keyword" : {
+       "status#keyword" : {
          "terms" : {
            "field" : "status.keyword",
            "size" : 200,

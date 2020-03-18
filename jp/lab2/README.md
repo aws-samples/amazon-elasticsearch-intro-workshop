@@ -100,7 +100,7 @@ Elasticsearch では，index と呼ばれる単位でデータを管理し，そ
 | binary           | バイナリ型                                                   |
 | range            | 範囲型，数値や日付の範囲を表す                               |
 
-事前に index の mapping を定義せずに，Elasticsearch にデータを挿入した場合，Elasicsearch は自動で文字列に対して text と keyword の 2 つのフィールドを作成してくれます．デフォルトが text 型であり，keyword 型のものは後ろに .keyword とつけた形でフィールド名が定義されます．status.keyword はこの keyword 型のフィールドを指したものでした．
+事前に index の mapping を定義せずに，Elasticsearch にデータを挿入した場合，Elasicsearch は自動で文字列に対して text と keyword の 2 つのフィールドを作成してくれます．デフォルトが text 型であり，keyword 型のものは後ろに .keyword とつけた形でフィールド名が定義されます．status.keyword はこの keyword 型のフィールドを指したものでした．今回の処理のようにグルーピングを行う際には，Elasticsearch の仕様で text 型ではなく keyword 型のフィールドを使用する必要がありますので，ここではstatus.keyword を使用しています．
 
 また Term という単語についても触れておきたいと思います．Kibana を操作する際には，裏側で Elasticsearch に対する集計クエリが発行されています．Elasticsearch に対して，先ほどのような文字列ベースでのデータの集約を行う場合は，以下のようなクエリが発行されます．ここで出てくる terms が，まさに Kibana 上の Term のことを指しています．Kibana で可視化を行う際には，見慣れない Elasticsearch 用語が時折出てきますが，慣れれば惑わずに使いこなせるでしょう．
 
