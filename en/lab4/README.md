@@ -2,26 +2,26 @@
 
 ハンズオンの冒頭で述べたように，Amazon ES のユースケースは大きくわけて，ログ分析と全文検索の 2 つがあります．すでにログ分析については Lab 2 で触れました．この Lab 4 では，全文検索を中心に，いくつかの応用的な使い方についてみていきたいと思います．
 
-## Section 1: Amazon ES を用いた日本語全文検索
+## Section 1: Amazon ES を用いた全文検索
 
-ここまで主にログ分析を中心に，Amazon ES の機能について触れてきました．しかし Elasticsearch という名前の通り，もともと Elasticsearch は全文検索を行うためのプロダクトとして開発されてきました．そこでこのセクションでは，Amazon ES を用いて日本語の全文検索を試してみたいと思います．
+ここまで主にログ分析を中心に，Amazon ES の機能について触れてきました．しかし Elasticsearch という名前の通り，もともと Elasticsearch は全文検索を行うためのプロダクトとして開発されてきました．そこでこのセクションでは，Amazon ES を用いて全文検索を試してみたいと思います．
 
-### 日本語全文検索用の index 作成
+### 全文検索用の index 作成
 
-まずは，日本語検索を行うための index を新たに作成しましょう．
+まずは，全文検索を行うための index を新たに作成しましょう．
 
 1. 画面左側の![kibana_devtools](../images/kibana_devtools.png)マークをクリックして，Dev tools のメニューを開きます
 
-2. 下の **"Console"** に以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．ここでは，シンプルに "content" という 1 フィールドのみが存在する，jpdocs という index を作成しました．Lab 2 では，データ挿入時に Amazon ES 側でフィールドのマッピングを自動認識する形で index を作成しましたが，ここでは明示的に日本語テキストの解析を行うために，前もってマッピングを指定して index を作成しています
+2. 下の **"Console"** に以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．ここでは，シンプルに "content" という 1 フィールドのみが存在する，mydocs という index を作成しました．Lab 2 では，データ挿入時に Amazon ES 側でフィールドのマッピングを自動認識する形で index を作成しましたが，ここでは明示的にテキストの解析を行うために，前もってマッピングを指定して index を作成しています
 
    ```json
-   PUT jpdocs
+   PUT mydocs
    {
      "mappings" : {
        "properties" : {
          "doc" : {
            "type" : "text",
-           "analyzer": "kuromoji"
+           "analyzer": "standard"
          }
        }
      }
@@ -30,24 +30,24 @@
 
 3. 続いて以下のコマンドを実行して，作成した index に対してドキュメントを 2 件追加します
 
-   ```
-   POST jpdocs/_bulk
-   {"index":{"_index":"jpdocs","_type":"_doc"}}
-   {"content":"近所の地銀に口座を持っている"}
-   {"index":{"_index":"jpdocs","_type":"_doc"}}
-   {"content":"築地銀だこにはしょっちゅう行く"}
+   ```json
+   POST mydocs/_bulk
+   {"index":{"_index":"mydocs","_type":"_doc"}}
+   {"content":"Amazon Redshift is a high speed enterprise grade data warehouse service."}
+   {"index":{"_index":"mydocs","_type":"_doc"}}
+   {"content":"Amazon Web Services offers various kind of analytics services."}
    ```
 
-上の手順 2 で index を作成した際に，`"analyzer": "kuromoji"` と設定しました．Elasticsearch では analyzer を指定することで，自動でテキストフィールドを解析して，後から検索しやすい形にします．[Kuromoji](https://github.com/atilika/kuromoji) は Java で書かれたオープンソースの日本語形態素解析エンジンで，Amazon ES で日本語テキスト解析を行う際に使われる analyzer です．kuromoji analyzer には複数の解析処理が含まれています．一覧は[こちら](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-analyzer.html)をご覧ください．
+上の手順 2 で index を作成した際に，`"analyzer": "standard"` と設定しました．Elasticsearch では analyzer を指定することで，自動でテキストフィールドを解析して，後から検索しやすい形にします．Standard analyzer は Amazon ES のデフォルト analyzer で，検索に役立つさまざまな設定を行うことができます．詳しくは[こちら](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-standard-analyzer.html)をご覧ください．
 
-### 日本語検索クエリの実行
+### 全文検索クエリの実行
 
 それでは，上で作った index に対して実際に検索クエリを投げてみましょう．
 
 1. Dev tools の Console に対して，以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．`_search` API を叩くことで，検索クエリを実行することができます．クエリパラメタとして，"content" フィールドが "講座" にマッチするものを取得するようなクエリ条件を指定しています
 
    ```json
-   GET jpdocs/_search?q=content:"口座"
+   GET mydocs/_search?q=content:"redshift"
    ```
 
 2. 想定通り，以下のような結果が得られたかと思います
@@ -67,294 +67,133 @@
          "value" : 1,
          "relation" : "eq"
        },
-       "max_score" : 0.5753642,
+       "max_score" : 0.2876821,
        "hits" : [
          {
-           "_index" : "jpdocs",
+           "_index" : "mydocs",
            "_type" : "_doc",
-           "_id" : "c6W25nABdQ_VtJWA5ID1",
-           "_score" : 0.5753642,
+           "_id" : "YKXvBXEBdQ_VtJWAeY85",
+           "_score" : 0.2876821,
            "_source" : {
-             "content" : "近所の地銀に口座を持っている"
+             "content" : "Amazon Redshift is a high speed enterprise grade data warehouse service."
            }
          }
        ]
      }
    }
+   
    ```
 
-3. では次に，Dev tools の Console に対して，以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください
+3. ここで "Redshift" ではなく，"redshift" で検索しても正しくドキュメントにヒットしたことに気づいたでしょうか．この背景を確認するために，以下のクエリを実行して，どのように文章が解析されたのかを確認してみましょう
 
    ```json
-   GET jpdocs/_search?q=content:"地銀"
-   ```
-
-4. すると，今度は想定と違い，ドキュメントが 2 つとも検索結果として返ってきてしまいました
-
-   ```json
+   GET mydocs/_analyze
    {
-     "took" : 8,
-     "timed_out" : false,
-     "_shards" : {
-       "total" : 5,
-       "successful" : 5,
-       "skipped" : 0,
-       "failed" : 0
-     },
-     "hits" : {
-       "total" : {
-         "value" : 2,
-         "relation" : "eq"
-       },
-       "max_score" : 0.5753642,
-       "hits" : [
-         {
-           "_index" : "jpdocs",
-           "_type" : "_doc",
-           "_id" : "c6W25nABdQ_VtJWA5ID1",
-           "_score" : 0.5753642,
-           "_source" : {
-             "content" : "近所の地銀に口座を持っている"
-           }
-         },
-         {
-           "_index" : "jpdocs",
-           "_type" : "_doc",
-           "_id" : "dKW25nABdQ_VtJWA5ID1",
-           "_score" : 0.5753642,
-           "_source" : {
-             "content" : "築地銀だこにはしょっちゅう行く"
-           }
-         }
-       ]
-     }
+     "analyzer": "standard", 
+     "text": "Amazon Redshift is a high speed enterprise grade data warehouse service."
    }
    ```
 
-5. この理由を確かめるために，格納したドキュメントがどのように解析されたのかを確認してみます．Dev tools  で以下の内容を実行してください．`_analyze` API を叩くことで，指定した analyzer で text を解析した結果を表示させることができます
-
-   ```json
-   GET jpdocs/_analyze
-   {
-     "analyzer": "kuromoji", 
-     "text": "築地銀だこにはしょっちゅう行く"
-   }
-   ```
-
-6. すると，"築地銀だこ" が正しく認識されずに，"築"，"地銀"，"だこ" の 3 つに分割されていたことがわかります．そのため "地銀" で検索された際に，このドキュメントも検索結果に含まれてしまったということです．なお，解析結果に "には" が含まれていないのに気がついた方がいるかもしれません．これは kuromoji analyzer の中に ja_stop token filter というフィルタが含まれているためです．このフィルタは，"で"，"や" といった一般的に検索の役に立たない助詞等を，あらかじめドキュメントを登録する際に取り除いておいてくれます 
+6. すると以下のように， 全ての単語が小文字に変換されていることに気づくでしょう．これは standard analyzer の中に [Lower Case Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lowercase-tokenfilter.html) と呼ばれるフィルターが含まれており，ここで全ての単語を小文字に変換しているのです．ここで使用した standard analyzer 以外にも，さまざまな built-in の analyzer がありますので，詳しく知りたい方は[こちら](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html)を参照してください．
 
    ```json
    {
      "tokens" : [
        {
-         "token" : "築",
+         "token" : "amazon",
          "start_offset" : 0,
-         "end_offset" : 1,
-         "type" : "word",
+         "end_offset" : 6,
+         "type" : "<ALPHANUM>",
          "position" : 0
        },
        {
-         "token" : "地銀",
-         "start_offset" : 1,
-         "end_offset" : 3,
-         "type" : "word",
+         "token" : "redshift",
+         "start_offset" : 7,
+         "end_offset" : 15,
+         "type" : "<ALPHANUM>",
          "position" : 1
        },
        {
-         "token" : "だこ",
-         "start_offset" : 3,
-         "end_offset" : 5,
-         "type" : "word",
+         "token" : "is",
+         "start_offset" : 16,
+         "end_offset" : 18,
+         "type" : "<ALPHANUM>",
          "position" : 2
        },
        {
-         "token" : "しょっちゅう",
-         "start_offset" : 7,
-         "end_offset" : 13,
-         "type" : "word",
-         "position" : 5
+         "token" : "a",
+         "start_offset" : 19,
+         "end_offset" : 20,
+         "type" : "<ALPHANUM>",
+         "position" : 3
        },
        {
-         "token" : "行く",
-         "start_offset" : 13,
-         "end_offset" : 15,
-         "type" : "word",
-         "position" : 6
-       }
-     ]
-   }
-   ```
-
-ここまでみてきたように，kuromoji analyzer を指定することで，Amazon ES で日本語全文検索を行うことができるようになります．ただし kuromoji は常に適切な解析を行ってくれるわけではありません．次のセクションでは，適切な解析を行い，良い検索結果を返すためのカスタマイズについてみていきます．
-
-## Section 2: カスタム日本語辞書と類義語の適用
-
-このセクションでは，カスタム日本語辞書と，類義語（Synonym）を設定することで，より適切な検索結果を返せるようにしていきます．
-
-### カスタム日本語辞書の適用
-
-先ほどのように "築地銀だこ" が "築"，"地銀"，"だこ" の 3 つに分割しまっていたのは，"築地銀だこ" が固有名詞であるため，kuromoji がカバーできる一般的な日本語表現ではなかったためです．このような単語をあらかじめ登録しておくことで，analyzer が適切に形態素解析を行ってくれるようになります．
-
-1. Dev tools の Console に対して，以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．先ほど作成した index を削除してしまいます
-
-   ```json
-   DELETE jpdocs
-   ```
-
-2. 続いて新しい index を作成します．今度は，あらかじめ定義された kuromoji analyzer ではなく，これをカスタマイズしたものを使用します．先ほど "kuromoji" と書かれていた analyzer の値が，今度は "my_analyzer" となっています．この "my_analyzer" の設定が，その下の "settings" 以下に書かれているものです．その中に，`"user_dictionary_rules": ["築地銀だこ,築地 銀だこ,ツキジ ギンダコ,カスタム名詞"]` と書かれているのが，新しく追加されたユーザー辞書です．ここでは "築地銀だこ" が "築地" と "銀だこ" の 2 単語に分割されるように指定しました
-
-   ```json
-   PUT jpdocs
-   {
-     "mappings" : {
-       "properties" : {
-         "content" : {
-           "type" : "text",
-           "analyzer": "my_analyzer"
-         }
-       }
-     },
-     "settings": {
-       "index": {
-         "analysis": {
-           "analyzer": {
-             "my_analyzer": {
-               "type": "custom",
-               "tokenizer": "my_kuromoji_tokenizer",
-               "filter": [ "ja_stop" ]
-             }
-           },
-           "tokenizer": {
-             "my_kuromoji_tokenizer": {
-               "type": "kuromoji_tokenizer",
-               "mode": "search",
-               "user_dictionary_rules": [
-                 "築地銀だこ,築地 銀だこ,ツキジ ギンダコ,カスタム名詞"
-               ]
-             }
-           }
-         }
-       }
-     }
-   }
-   ```
-
-3. 先ほどと同様にデータを追加します
-
-   ```json
-   POST jpdocs/_bulk
-   {"index":{"_index":"jpdocs","_type":"_doc"}}
-   {"content":"近所の地銀に口座を持っている"}
-   {"index":{"_index":"jpdocs","_type":"_doc"}}
-   {"content":"築地銀だこにはしょっちゅう行く"}
-   ```
-
-4. 同様に検索クエリを実行してください
-
-   ```json
-   GET jpdocs/_search?q=content:"地銀"
-   ```
-
-5. 今度は想定通り，検索結果に ""築地銀だこにはしょっちゅう行く" が含まれず，1 件だけ返ってくるでしょう
-
-   ```json
-   {
-     "took" : 2,
-     "timed_out" : false,
-     "_shards" : {
-       "total" : 5,
-       "successful" : 5,
-       "skipped" : 0,
-       "failed" : 0
-     },
-     "hits" : {
-       "total" : {
-         "value" : 1,
-         "relation" : "eq"
-       },
-       "max_score" : 0.6931472,
-       "hits" : [
-         {
-           "_index" : "jpdocs",
-           "_type" : "_doc",
-           "_id" : "h6XN5nABdQ_VtJWAXYA2",
-           "_score" : 0.6931472,
-           "_source" : {
-             "content" : "近所の地銀に口座を持っている"
-           }
-         }
-       ]
-     }
-   }
-   ```
-
-6. 最後に，実際にどのように解析が行われたのか，以下のコマンドを実行して確認してみます
-
-   ```json
-   GET jpdocs/_analyze
-   {
-     "analyzer": "my_analyzer", 
-     "text": "築地銀だこにはしょっちゅう行く"
-   }
-   ```
-
-7. 先ほどと異なり，想定通り "築地"，"銀だこ" と分割されているのが確認できます．これで "地銀" にはもう引っかからなくなりました
-
-   ```json
-   {
-     "tokens" : [
-       {
-         "token" : "築地",
-         "start_offset" : 0,
-         "end_offset" : 2,
-         "type" : "word",
-         "position" : 0
-       },
-       {
-         "token" : "銀だこ",
-         "start_offset" : 2,
-         "end_offset" : 5,
-         "type" : "word",
-         "position" : 1
-       },
-       {
-         "token" : "しょっちゅう",
-         "start_offset" : 7,
-         "end_offset" : 13,
-         "type" : "word",
+         "token" : "high",
+         "start_offset" : 21,
+         "end_offset" : 25,
+         "type" : "<ALPHANUM>",
          "position" : 4
        },
        {
-         "token" : "行く",
-         "start_offset" : 13,
-         "end_offset" : 15,
-         "type" : "word",
+         "token" : "speed",
+         "start_offset" : 26,
+         "end_offset" : 31,
+         "type" : "<ALPHANUM>",
          "position" : 5
+       },
+       {
+         "token" : "enterprise",
+         "start_offset" : 32,
+         "end_offset" : 42,
+         "type" : "<ALPHANUM>",
+         "position" : 6
+       },
+       {
+         "token" : "grade",
+         "start_offset" : 43,
+         "end_offset" : 48,
+         "type" : "<ALPHANUM>",
+         "position" : 7
+       },
+       {
+         "token" : "data",
+         "start_offset" : 49,
+         "end_offset" : 53,
+         "type" : "<ALPHANUM>",
+         "position" : 8
+       },
+       {
+         "token" : "warehouse",
+         "start_offset" : 54,
+         "end_offset" : 63,
+         "type" : "<ALPHANUM>",
+         "position" : 9
+       },
+       {
+         "token" : "service",
+         "start_offset" : 64,
+         "end_offset" : 71,
+         "type" : "<ALPHANUM>",
+         "position" : 10
        }
      ]
    }
    ```
 
-上記手順の 2 で，"user_dictionary_rules" に指定した形式について補足しておきます．単一文字列の中に，カンマ区切りで以下のような順序で必要な項目を記述します．"形態素解析" および "読み" が複数の単語に分かれる場合には，半角スペースを入れてください．より細かい説明については，[Elasticsearch のドキュメント](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-tokenizer.html)を参照してください．
+### Synonym の設定
 
-| 単語       | 形態素解析結果 | 読み            | 品詞         |
-| ---------- | -------------- | --------------- | ------------ |
-| 築地銀だこ | 築地 銀だこ    | ツキジ ギンダコ | カスタム名詞 |
-
-### 類義語の適用
-
-セクションの最後に，類義語の設定を行いたいと思います．ユーザーが検索を行う際に，実際に本文に含まれている単語にピッタリ一致するキーワードで検索してくれるとは限りません．似たような意味ではあるが，異なる表現のキーワードを使う場合があるでしょう．類義語を設定しておくことで，そのようなときでもきちんと検索結果を返せるようになります．
+続いて類義語（Synonym）の設定を行いたいと思います．ユーザーが検索を行う際に，実際に本文に含まれている単語にピッタリ一致するキーワードで検索してくれるとは限りません．似たような意味ではあるが，異なる表現のキーワードを使う場合があるでしょう．類義語を設定しておくことで，そのようなときでもきちんと検索結果を返せるようになります．
 
 1. Dev tools の Console に対して，以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．先ほど作成した index を削除してしまいます
 
    ```json
-   DELETE jpdocs
+   DELETE mydocs
    ```
 
-2. 続いて新しい index を作成します．今度は，末尾に "my_synonym" という新しい類義語の設定を加えています．ここでは "地銀"，"都市銀"，"銀行" の 3 つを，同じ単語と見なすようにしています．"築地銀だこ" と "たこ焼き" も同様です．
+2. 続いて新しい index を作成します．今度は，末尾に "my_synonym" という新しい類義語の設定を加えています．ここでは "amazon web services"，"aws"，"cloud" の 3 つを，同じ単語と見なすようにしています．"redshift"，"rs"，"dwh" も同様です
 
    ```json
-   PUT jpdocs
+   PUT mydocs
    {
      "mappings" : {
        "properties" : {
@@ -370,19 +209,11 @@
            "analyzer": {
              "my_analyzer": {
                "type": "custom",
-               "tokenizer": "my_kuromoji_tokenizer",
+               "tokenizer": "standard",
                "filter": [
                  "my_synonym",
-                 "ja_stop"
-               ]
-             }
-           },
-           "tokenizer": {
-             "my_kuromoji_tokenizer": {
-               "type": "kuromoji_tokenizer",
-               "mode": "search",
-               "user_dictionary_rules": [
-                 "築地銀だこ,築地 銀だこ,ツキジ ギンダコ,カスタム名詞"
+                 "lowercase",
+                 "stop"
                ]
              }
            },
@@ -390,8 +221,8 @@
              "my_synonym" : {
                "type": "synonym",
                "synonyms": [
-                 "地銀,都市銀,銀行",
-                 "築地銀だこ,たこ焼き"
+                 "amazon web services,aws,cloud",
+                 "redshift,rs,dwh"
                ]
              }
              
@@ -401,28 +232,28 @@
      }
    }
    ```
-
+   
 3. 先ほどと同様にデータを追加します
 
    ```json
-   POST jpdocs/_bulk
-   {"index":{"_index":"jpdocs","_type":"_doc"}}
-   {"content":"近所の地銀に口座を持っている"}
-   {"index":{"_index":"jpdocs","_type":"_doc"}}
-   {"content":"築地銀だこにはしょっちゅう行く"}
+   POST mydocs/_bulk
+   {"index":{"_index":"mydocs","_type":"_doc"}}
+   {"content":"Amazon Redshift is a high speed enterprise grade data warehouse service."}
+   {"index":{"_index":"mydocs","_type":"_doc"}}
+   {"content":"Amazon Web Services offers various kind of analytics services."}
    ```
 
 4. 同様に検索クエリを実行してください．ただし今回は，文章には含まれていない単語で検索を行います
 
    ```json
-   GET jpdocs/_search?q=content:"たこ焼き"
+   GET mydocs/_search?q=content:"aws"
    ```
 
-5. 問題なく検索結果が取得できていることを確認できるでしょう
+5. 文章に単語が踏まれていないにも関わらず，問題なく検索結果が取得できていることを確認できるでしょう！
 
    ```json
    {
-     "took" : 8,
+     "took" : 4,
      "timed_out" : false,
      "_shards" : {
        "total" : 5,
@@ -435,15 +266,15 @@
          "value" : 1,
          "relation" : "eq"
        },
-       "max_score" : 1.2574185,
+       "max_score" : 0.8630463,
        "hits" : [
          {
-           "_index" : "jpdocs",
+           "_index" : "mydocs",
            "_type" : "_doc",
-           "_id" : "yqX05nABdQ_VtJWAeoAt",
-           "_score" : 1.2574185,
+           "_id" : "maUaBnEBdQ_VtJWA-48R",
+           "_score" : 0.8630463,
            "_source" : {
-             "content" : "築地銀だこにはしょっちゅう行く"
+             "content" : "Amazon Web Services offers various kind of analytics services."
            }
          }
        ]
@@ -451,65 +282,84 @@
    }
    ```
 
-6. 最後に，類義語がどのように適用されているかを確認するために，以下のコマンドを実行します
+6. 最後に，元のドキュメントがどのように解析されているかを確認するために，以下のコマンドを実行します
 
    ```json
-   GET jpdocs/_analyze
+   GET mydocs/_analyze
    {
      "analyzer": "my_analyzer", 
-     "text": "築地銀だこにはしょっちゅう行く"
+     "text": "Amazon Web Services offers various kind of analytics services."
    }
    ```
 
-7. 以下のように，解析結果に，元のドキュメントには含まれていない "たこ焼き" が追加されているのが確認できます．これにより，先ほどのクエリがこのドキュメントにヒットしたわけです
+7. 今度は先ほどと違い，"is"，"of" といった単語が含まれていないのがみて取れるでしょう．実はこれ，先ほど index を再作成する際に "stop" という "filter" を追加したためです．この [Stop Tken Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html) は，検索の役に立ちづらい助詞や前置詞を，解析する際にあらかじめ除外しておくというものです．これにより，"of" という単語で検索しても，ドキュメントがヒットしないようになります
 
    ```json
    {
      "tokens" : [
        {
-         "token" : "築地",
+         "token" : "amazon",
          "start_offset" : 0,
-         "end_offset" : 2,
-         "type" : "word",
+         "end_offset" : 6,
+         "type" : "<ALPHANUM>",
          "position" : 0
        },
        {
-         "token" : "たこ焼き",
-         "start_offset" : 0,
-         "end_offset" : 5,
-         "type" : "SYNONYM",
-         "position" : 0,
-         "positionLength" : 2
-       },
-       {
-         "token" : "銀だこ",
-         "start_offset" : 2,
-         "end_offset" : 5,
-         "type" : "word",
+         "token" : "web",
+         "start_offset" : 7,
+         "end_offset" : 10,
+         "type" : "<ALPHANUM>",
          "position" : 1
        },
        {
-         "token" : "しょっちゅう",
-         "start_offset" : 7,
-         "end_offset" : 13,
-         "type" : "word",
+         "token" : "services",
+         "start_offset" : 11,
+         "end_offset" : 19,
+         "type" : "<ALPHANUM>",
+         "position" : 2
+       },
+       {
+         "token" : "offers",
+         "start_offset" : 20,
+         "end_offset" : 26,
+         "type" : "<ALPHANUM>",
+         "position" : 3
+       },
+       {
+         "token" : "various",
+         "start_offset" : 27,
+         "end_offset" : 34,
+         "type" : "<ALPHANUM>",
          "position" : 4
        },
        {
-         "token" : "行く",
-         "start_offset" : 13,
-         "end_offset" : 15,
-         "type" : "word",
+         "token" : "kind",
+         "start_offset" : 35,
+         "end_offset" : 39,
+         "type" : "<ALPHANUM>",
          "position" : 5
+       },
+       {
+         "token" : "analytics",
+         "start_offset" : 43,
+         "end_offset" : 52,
+         "type" : "<ALPHANUM>",
+         "position" : 7
+       },
+       {
+         "token" : "services",
+         "start_offset" : 53,
+         "end_offset" : 61,
+         "type" : "<ALPHANUM>",
+         "position" : 8
        }
      ]
    }
-   
    ```
 
-このセクションでは，日本語全文検索におけるカスタム辞書や同義語の利用についてみてきました．しかし本セクションで振られたのはごく一部で， Amazon ES ではより細かくさまざまな全文検索の設定を行うことができます．[Elasticsearch のドキュメント](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-tokenizer.html) に詳細が書かれていますので，ぜひご一読ください．
+このセクションでは，全文検索における同義語やフィルタの利用についてみてきました．しかし本セクションで振られたのはごく一部で， Amazon ES ではより細かくさまざまな全文検索の設定を行うことができます．[Elasticsearch のドキュメント](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-tokenizer.html) に詳細が書かれていますので，ぜひご一読ください．
 
-## Section 3: SQL を用いたログ分析
+## Section 2: SQL を用いたログ分析
 
 ここまで _search API を直接叩く形の検索クエリの書き方についてみてきました．しかし Elasticsearch のクエリは，JSON の入れ子で記述をする必要があり，書くのに手間がかかってしまいます．こうした問題をカバーするための方法がいくつかあります．例えば Python には，[Elasticsearch DSL](https://elasticsearch-dsl.readthedocs.io/en/latest/) という高レベルのクエリ記述ライブラリや，低レベルのクライアントである [Python Elasticsearch Client](https://elasticsearch-py.readthedocs.io/en/master/) があり，これらを用いることで比較的簡単にクエリを記述・実行することができます．
 
@@ -794,4 +644,4 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
 
 ## まとめ
 
-この Lab では，日本全文検索，カスタム辞書の適用，そして SQL API の使用という，Elasticsearch による検索の応用的な側面にフォーカスを当てました．以上で Elasticsearch の Workshop は全て完了です．[こちらの手順](../cleanup/README.md)に沿って，忘れずに後片付けを行なってください．リソースが残ったままだと，課金が発生し続けます．
+この Lab では，全文検索とそのカスタマイズ，そして SQL API の使用という，Elasticsearch による検索の応用的な側面にフォーカスを当てました．以上で Elasticsearch の Workshop は全て完了です．[こちらの手順](../cleanup/README.md)に沿って，忘れずに後片付けを行なってください．リソースが残ったままだと，課金が発生し続けます．
