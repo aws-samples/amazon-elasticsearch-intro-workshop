@@ -105,7 +105,7 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 
 **Role Mappings**: 上で定義した Elasticsearch の Role と，AWS の IAM ユーザーや IAM ロールの紐付けのことを指します．これにより，特定の IAM ロールに対して，必要な Elasticsearch の操作を許可できるようになります
 
-ここでは，Amazon ES にログを追加する権限を持った書き込み用ロールを新しく定義し，このロールを AWS 側の Firehose の IAM ロールに紐付けます．これらをまとめたものが以下の図になります．同じロールという言葉が AWS IAM と Open Distro とで使われており混乱しやすいですが，両者は全く別のものです．AWS IAM のロールは，AWS 上の権限管理を行うためのもので，Open Distro のロールは Elasticsearch クラスター上の権限管理ようです．これらを結びつけるのが Open Distro の Role Mappings の役割となります．
+ここでは，Amazon ES にログを追加する権限を持った書き込み用ロールを新しく定義し，このロールを AWS 側の Firehose の IAM ロールに紐付けます．これらをまとめたものが以下の図になります．同じロールという言葉が AWS IAM と Open Distro とで使われており混乱しやすいですが，両者は全く別のものです．AWS IAM のロールは，AWS 上の権限管理を行うためのもので，Open Distro のロールは Elasticsearch クラスター上の権限管理用です．これらを結びつけるのが Open Distro の Role Mappings の役割となります．
 
 ![role_mappings](../images/role_mappings.png)
 
@@ -250,7 +250,7 @@ SNS のトピックは，通知を管理する単位です．Lab 3 で Amazon ES
    ```
 
 8. 画面下部の **[ 信頼ポリシーの更新]** ボタンを押して元の画面に戻ります
-9. 戻ったら，IAM ロールの詳細画面に書かれている "ロール ARN" の値（`arn:aws:iam::123456789012:role/amazones_sns_alert_policy`のような文字列です）をコピーしておきます．この文字列は Lab 3  で使用します
+9. 戻ったら，IAM ロールの詳細画面に書かれている "ロール ARN" の値（`arn:aws:iam::123456789012:role/amazones_sns_alert_role`のような文字列です）をコピーしておきます．この文字列は Lab 3  で使用します
 
 以上で，Amazon SNS の設定が終わりました
 
