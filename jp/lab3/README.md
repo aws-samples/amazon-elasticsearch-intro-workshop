@@ -74,7 +74,7 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
 1. セキュリティ設定のトップ画面から **[Role Mappings]** ボタンを押します．
 2. 画面右上の **[+]** ボタンを押したら，**"Role"** のプルダウンメニューから，**[iot_developer_role]** を選択します．続いて **"Users"** に先ほど作成したユーザーの名前，**"iot_developer"** を入力してください．最後に **[Submit]** を押して紐付け完了です
 3. 閲覧者についても同様に，画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[iot_reader_role]** を選択します．続いて **"Users"** に**"iot_reader"** を入力して **[Submit]** を押して，紐付けを終わらせてください
-4. さらに Kibana UI を使用するために，Amazon ES 側で事前に定義されている kibana_user ロールを，開発者と閲覧者の両方に付与する必要があります．画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[kibana_user]** を選択します．続いて **"Users"** に**"iot_developer"** を入力し， **[+ Add User]** ボタンを押して **"iot_reader"** も追加したら，**[Submit]** を押します
+4. さらに Kibana UI を使用するために，Amazon ES 側で事前に定義されている kibana_user ロールを，開発者と閲覧者の両方に付与する必要があります．画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[kibana_user]** を選択します．続いて **"Users"** に **"iot_developer"** を入力し， **[+ Add User]** ボタンを押して **"iot_reader"** も追加したら，**[Submit]** を押します
 
 以上でテナントの作成，ロールとユーザーの作成，紐付けまで完了しました．それでは実際に，作成したユーザーでログインしてみて，想定した通りの権限が許可されているかを確認してみましょう
 
@@ -114,7 +114,7 @@ Amazon ES におけるアラートの仕組みは以下の通りです．今回�
 2. メニューから **[Destinations]** タブを選択して，右側の **[Add destination]** ボタンを押します
 3. **"Name"** に **"Amazon ES alert topic"** と入力します．**"Type"** プルダウンから **[Amazon SNS]** を選択してください．**"Settings"** の **"SNS Topic ARN"** および **"IAM role ARN"** には，Lab 1 で作成した SNS トピックと IAM ロールの ARN を入れてください
    - **SNS Topic ARN**: `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` のような文字列
-   - **IAM role ARN**: `arn:aws:iam::123456789012:role/amazones_sns_alert_policy`のような文字列
+   - **IAM role ARN**: `arn:aws:iam::123456789012:role/amazones_sns_alert_role`のような文字列
 4. **[Create]** ボタンを押します 
 
 ### Monitor の設定
@@ -171,7 +171,7 @@ Lab 1 と 2 で説明したように，Amazon ES のデータは基本的に ind
 
 ### Index policy の作成
 
-index の運用ルールを記述した JSON 形式の設定ファイルを，Amazon ES では，index policy と呼びます．index 作成が行われたから 7 日間経過したら，index を自動で削除する index policy を作成していきます．
+index の運用ルールを記述した JSON 形式の設定ファイルを，Amazon ES では，index policy と呼びます．index 作成が行われてから 7 日間経過したら，index を自動で削除する index policy を作成していきます．
 
 1. 画面左側の![kibana_index_management](../images/kibana_index_management.png)マークをクリックして，Index Management のメニューを開きます
 

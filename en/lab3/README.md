@@ -114,7 +114,7 @@ Amazon ES におけるアラートの仕組みは以下の通りです．今回�
 2. メニューから **[Destinations]** タブを選択して，右側の **[Add destination]** ボタンを押します
 3. **"Name"** に **"Amazon ES alert topic"** と入力します．**"Type"** プルダウンから **[Amazon SNS]** を選択してください．**"Settings"** の **"SNS Topic ARN"** および **"IAM role ARN"** には，Lab 1 で作成した SNS トピックと IAM ロールの ARN を入れてください
    - **SNS Topic ARN**: `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` のような文字列
-   - **IAM role ARN**: `arn:aws:iam::123456789012:role/amazones_sns_alert_policy`のような文字列
+   - **IAM role ARN**: `arn:aws:iam::123456789012:role/amazones_sns_alert_role`のような文字列
 4. **[Create]** ボタンを押します 
 
 ### Monitor の設定
