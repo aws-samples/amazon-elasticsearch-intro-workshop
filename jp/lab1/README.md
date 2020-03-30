@@ -19,7 +19,7 @@
 3. **"Step 1: デプロイタイプの選択"** において，**"デプロイタイプの選択"** で **[開発およびテスト]** を選択します．バージョンは変更せず，そのまま **[次へ]** を押してください
 4. **"Step 2: ドメインの設定"** で，**"Elasticsearch ドメイン名"** に **"workshop-esdomain"** と入力します．それ以外の箇所は変更せずに **[次へ]** を押してください
 5. **"Step 3: アクセスとセキュリティの設定"** で，**"ネットワーク構成"** を **[パブリックアクセス]** に設定します．続いて **"細かいアクセスコントロール"** で，**[マスターユーザーの作成]** を選択してください．ここで設定マスターユーザーのアカウントは，Amazon ES 上の可視化ツール Kibana にログインするために使われます．インストラクションに従って任意の **マスターユーザー名** および **マスターパスワード** を入力してください．マスターユーザー名は 1-16 文字の間で設定する必要があります．またマスターパスワードは 8 文字以上，かつ大文字，小文字，数字，および特殊記号をそれぞれ一つずつ含む形で入力してください．ここで設定したユーザー名，パスワードは Section 3 で使用します
-6. 次にアクセスポリシーの項目を設定します．[こちら](https://www.cman.jp/network/support/go_access.cgi)にアクセスして，自身の IP を確認してください．続いて **"ドメインアクセスポリシー"** で **[カスタムアクセスポリシー]** を選択し，その下の項目で **[IPv4 アドレス]** を選びます．その右の空欄に，先ほど確認した自身の IP をそのまま入力し，その右を **[許可]** に設定します．ここまで設定したら，画面一番下の **[次へ]** を押してください
+6. 次にアクセスポリシーの項目を設定します．[こちら](http://checkip.amazonaws.com/)にアクセスして，自身の IP を確認してください．続いて **"ドメインアクセスポリシー"** で **[カスタムアクセスポリシー]** を選択し，その下の項目で **[IPv4 アドレス]** を選びます．その右の空欄に，先ほど確認した自身の IP をそのまま入力し，その右を **[許可]** に設定します．ここまで設定したら，画面一番下の **[次へ]** を押してください
    ![access_policy](../images/access_policy.png)
 7. **"Step 4: 確認"** で，これまでの設定内容を眺めて，特に問題がなければ画面右下の **[確認]** を押してドメインを作成してください．ドメイン作成には 15 分程度かかりますので，その間に次の Firehose ストリーム作成に進みます
 
@@ -27,7 +27,7 @@
 
 今回のハンズオンでは，あくまでお試しということで 1 台だけで Elasticsearch を立てています．ですが本来，Elasticsearch は複数台のマシンでクラスターを組むことで，大規模データを扱ったり，高い可用性を得たりできるものです．そこで本番運用する際の Amazon ES では，クラスターの管理を行う専用のマスターノードを複数台，また実際のデータを格納するデータノードも複数台用意します．
 
-Amazon ES における典型的な Easticsearch クラスターの構成は，以下のものになります．AWS リージョンにある 3 つの Availability Zone（以下 AZ）にノードを分散させて，どこかひとつの AZ で障害が起こっても，クラスターを動かし続けられるような，可用性の高い形になります．自分で EC2 上に，このような構成の Elasticsearch クラスターを立てたり，ソフトウェアのバージョンアップや設定の変更を行ったりするのは，非常に骨が折れる作業です．Amazon ES を用いることで，このような構成をわずか数クリックで立ち上げることができるようになります．
+Amazon ES における典型的な Easticsearch クラスターの構成は，以下のものになります．AWS リージョンにある 3 つ以上の Availability Zone（以下 AZ）にノードを分散させて，どこかひとつの AZ で障害が起こっても，クラスターを動かし続けられるような，可用性の高い形になります．自分で EC2 上に，このような構成の Elasticsearch クラスターを立てたり，ソフトウェアのバージョンアップや設定の変更を行ったりするのは，非常に骨が折れる作業です．Amazon ES を用いることで，このような構成をわずか数クリックで立ち上げることができるようになります．
 
 ![amazones_high_availability](../images/amazones_high_availability.png)
 
@@ -48,7 +48,7 @@ Amazon ES における典型的な Easticsearch クラスターの構成は，�
 3. **"Step 1: Name and source"** では，**"Delivery stream name"** に **"workshop-firehose"** と入力します．他の設定は変更せずに **[Next]** を押してください
 4. **"Step 2: Process records"** は特に何も変更せず，**[Next]** を押してください
 5. **"Step 3: Choose a destination"** で，**"Destionation"** として **[Amazon Elasticsearch Service]** を選択します．次に **"Amazon Elasticsearch Service destination"** の **"Domain"** で，先ほど作成した **[workshop-esdomain]** を選択してください．これで，先ほどの Amazon ES に対して自動でログを挿入することができるようになります．Domain が Processing のステータスの場合は，選択可能になるまで待ってください
-6. 次に **"Index"** で **"workshop-log"** と入力してください．Amazon ES の Index は，DB でいうところのテーブルに相当するものですが，この Firehose ストリームから送られたログは workshop-log という index に挿入されることになります．挿入時に Amazon ES 側に Index が存在しない場合には，自動で Index が作成されます
+6. 次に **"Index"** で **"workshop-log"** と入力してください．Amazon ES の Index は，非常に噛み砕いた例えをするなら DB でいうところのテーブルに相当するものですが，この Firehose ストリームから送られたログは workshop-log という index に挿入されることになります．挿入時に Amazon ES 側に Index が存在しない場合には，自動で Index が作成されます
 7. また **"Index rotation"** でプルダウンから **[Every hour]** を選択してください．この設定を行うことで，新しい index が 1 時間ごとに作成されます．index 名も "workshop-log-2020-04-01-09" のように，後ろに日時をつけた形で作成されます．これにより，ストリームで流れてくるデータを一定の日時ごとに区切って取り扱うことができるようになります（この形をとる意味については，Lab 3 で詳しく説明します）
 8. その下の **"S3 backup"** で，**"Back up S3 bucket"** の右側 **[Create new]** ボタンを押して，S3 バケットの作成画面に進みます．**"S3 bucket name"** に，**"workshop-firehose-backup-YYYYMMDD-YOURNAME"** と入力します（YYYYMMDD は 20200701 のように，今日の日付と置き換えてください．また YOURNAME は taroyamada のようにご自身の名前と置き換えてください．この場合バケット名は "workshop-firehose-backup-20200701-taroyamada" となります）．このバケットは， Firehose から Amazon ES に挿入する際にエラーになったレコードを，バックアップとして格納するためのものです
 9. **"Step 4: Configure settings"** で，一番下の "Permission" において **[Cteate new or choose]** ボタンを押します．**"IAM ロール"** で **[新しい IAM ロールの作成]** を選択して，**"ロール名"** に **"workshop_firehose_delivery_role"** と入力して **[許可]** ボタンを押します．下の画面に戻ったら **[Next]** を押します
@@ -116,7 +116,7 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 3. ログイン後の画面では，**[Explore on my own]** を選択します．続いて画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開きます
 4. **"Permissions and Roles"** の下にある **[Roles]** をクリックして，ロール管理画面に進みます．Amazon ES にログを挿入する用のロールを作成するために，画面右側の + ボタンをクリックします
    ![role_setting](../images/role_setting.png)
-5. **"Role name"** に **"opendistro_firehose_role"** と入力します．続いて上側の **[Cluster Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add Action Group]** ボタンを押します．プルダウンメニューから **[cluster_composite_ops]** を選択します．続いてもう一度 **[+ Add Action Group]** ボタンを押し，**[cluster_monitor]** を追加します．これらの権限は，クラスターの情報を読み取るためのもので，Open Distro 側であらかじめ定義されているものになります．詳細を知りたい方は[こちら](https://opendistro.github.io/for-elasticsearch-docs/docs/security-access-control/default-action-groups/#cluster-level)をご確認ください．これによって，下図のような状態になります
+5. **"Role name"** に **"workshop_firehose_delivery_role"** と入力します．続いて上側の **[Cluster Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add Action Group]** ボタンを押します．プルダウンメニューから **[cluster_composite_ops]** を選択します．続いてもう一度 **[+ Add Action Group]** ボタンを押し，**[cluster_monitor]** を追加します．これらの権限は，クラスターの情報を読み取るためのもので，Open Distro 側であらかじめ定義されているものになります．詳細を知りたい方は[こちら](https://opendistro.github.io/for-elasticsearch-docs/docs/security-access-control/default-action-groups/#cluster-level)をご確認ください．これによって，下図のような状態になります
    ![cluster_permissions](../images/cluster_permissions.png)
 6. 次に上側の **[Index Permissions]** タブを選択し，**[Add index permissions]** ボタンを押します．**"Index patterns"** に，先ほど Firehose 側で指定した index 名を含む **"workshop-log-*"** を入力してください．これは実際の index 名は "workshop-log-2020-04-01-09" のように，後ろに日付がつく形で作成されるため，これらを全て含む必要があるためです．続いてその下の **"Permissions: Actuion Groups"** で，この index に対して許可するアクションを設定します．**[+ Add Ation Group]** を押して，プルダウンメニューから **[create_index]** を選択します．同様に **[+ Add Ation Group]** を 2 回押して，**[manage]** と **[crud]** を追加します．最終的な状態は以下のようになります
    ![index_permissions](../images/index_permissions.png)
