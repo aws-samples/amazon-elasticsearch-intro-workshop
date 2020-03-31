@@ -19,7 +19,7 @@
    {
      "mappings" : {
        "properties" : {
-         "doc" : {
+         "content" : {
            "type" : "text",
            "analyzer": "kuromoji"
          }

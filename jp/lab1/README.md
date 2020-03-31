@@ -118,7 +118,7 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
    ![role_setting](../images/role_setting.png)
 5. **"Role name"** に **"workshop_firehose_delivery_role"** と入力します．続いて上側の **[Cluster Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add Action Group]** ボタンを押します．プルダウンメニューから **[cluster_composite_ops]** を選択します．続いてもう一度 **[+ Add Action Group]** ボタンを押し，**[cluster_monitor]** を追加します．これらの権限は，クラスターの情報を読み取るためのもので，Open Distro 側であらかじめ定義されているものになります．詳細を知りたい方は[こちら](https://opendistro.github.io/for-elasticsearch-docs/docs/security-access-control/default-action-groups/#cluster-level)をご確認ください．これによって，下図のような状態になります
    ![cluster_permissions](../images/cluster_permissions.png)
-6. 次に上側の **[Index Permissions]** タブを選択し，**[Add index permissions]** ボタンを押します．**"Index patterns"** に，先ほど Firehose 側で指定した index 名を含む **"workshop-log-*"** を入力してください．これは実際の index 名は "workshop-log-2020-04-01-09" のように，後ろに日付がつく形で作成されるため，これらを全て含む必要があるためです．続いてその下の **"Permissions: Actuion Groups"** で，この index に対して許可するアクションを設定します．**[+ Add Ation Group]** を押して，プルダウンメニューから **[create_index]** を選択します．同様に **[+ Add Ation Group]** を 2 回押して，**[manage]** と **[crud]** を追加します．最終的な状態は以下のようになります
+6. 次に上側の **[Index Permissions]** タブを選択し，**[Add index permissions]** ボタンを押します．**"Index patterns"** に，先ほど Firehose 側で指定した index 名を含む **"workshop-log-*"** を入力してください．これは実際の index 名は "workshop-log-2020-04-01-09" のように，後ろに日付がつく形で作成されるため，これらを全て含む必要があるためです．続いてその下の **"Permissions: Action Groups"** で，この index に対して許可するアクションを設定します．**[+ Add Ation Group]** を押して，プルダウンメニューから **[create_index]** を選択します．同様に **[+ Add Ation Group]** から **[manage]** と **[crud]** を追加します．最終的な状態は以下のようになります
    ![index_permissions](../images/index_permissions.png)
 7. 画面下側の，**[Save Role Definition]** ボタンを押して，ロールを作成してください
 
