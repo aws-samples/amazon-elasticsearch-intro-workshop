@@ -96,7 +96,7 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
 4. また，Dashoboards ページを開くと，以下のように "Percentage of Status" が OK のものしかないのがみて取れるかと思います．これも status カラムが OK のもののみを閲覧可能とするように設定していたためです．また IP アドレスがハッシュ化されているため，Private IP とそれ以外の時系列推移も，グラフが表示されていません
    ![dashboard_filtered](../images/dashboard_filtered.png)
 
-ここまでの確認が完了したら，iot_reader からログアウトして，**再度 awsuser で Kibana にログインし直して**ください．Section 2 以降を進めるために必須となります．
+ここまでの確認が完了したら，iot_reader からログアウトして，**再度 Lab1 で作成したマスターユーザーで Kibana にログインし直して**ください．Section 2 以降を進めるために必須となります．
 
 ## Section 2: Amazon SNS へのアラートの送信
 
@@ -123,7 +123,7 @@ Amazon ES におけるアラートの仕組みは以下の通りです．今回�
 
 1. 画面左側の![kibana_alerm](../images/kibana_alerm.png)マークをクリックして，セキュリティ設定のメニューを開きます
 2. メニューから **[Monitors]** タブを選択して，右側の **[Create monitor]** ボタンを押します
-3. Monitor 作成画面が開いたら，**"Monitor name"** に **"FAIL status monitor"** と入力します．続けて **"Define monitor"** カテゴリの中で，**"Index"** に **"workshop-log-*** と入力，**"Time field"** として **[timestamp]** を選びます．次に **"Create a monitor for"** のクエリを，`WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` とします．すべて設定すると以下のようになります
+3. Monitor 作成画面が開いたら，**"Monitor name"** に **"FAIL status monitor"** と入力します．続けて **"Define monitor"** カテゴリの中で，**"Index"** に **"workshop-log-*"** と入力，**"Time field"** として **[timestamp]** を選びます．次に **"Create a monitor for"** のクエリを，`WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` とします．すべて設定すると以下のようになります
    ![monitor_setting](../images/monitor_setting.png)
 4. **[Create]** ボタンを押して Monitor を作成します．Monitor を作成すると，そのまま Trigger の作成画面に遷移します
 
