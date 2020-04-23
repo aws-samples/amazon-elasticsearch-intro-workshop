@@ -509,7 +509,170 @@
 
 このセクションでは，日本語全文検索におけるカスタム辞書や同義語の利用についてみてきました．しかし本セクションで振られたのはごく一部で， Amazon ES ではより細かくさまざまな全文検索の設定を行うことができます．[Elasticsearch のドキュメント](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-tokenizer.html) に詳細が書かれていますので，ぜひご一読ください．
 
-## Section 3: SQL を用いたログ分析
+## Section 3: カスタム日本語辞書と類義語をファイルで適用
+
+前のセクションでは，index のマッピングの中に直接カスタム日本語辞書や類義語の指定を行いました．辞書にや類義語に登録する単語の数が少なければ，この形でも問題ありません．しかし単語数が膨大になった場合には，これをマッピング上で管理するのが困難になってきてしまいます．そこでこのセクションでは，カスタム日本語辞書や類義語をファイルに切り出して，それを Amazon ES ドメイン側で読み込む形に変更してみます．
+
+### パッケージを作成して Amazon ES ドメインにアタッチ
+
+カスタム日本語辞書や類義語のファイルを Amazon ES に適用するためには，ファイルを一旦 S3 にアップロードしてから，それを Amazon ES 側にパッケージとして登録します．登録済みパッケージを Amazon ES ドメインにアタッチすることで，パッケージが利用可能となります．それでは順番に実行していきましょう．
+
+1. まず，S3 にアップロードするための[辞書ファイル](./custom_dictionary.csv)と[類義語ファイル](./custom_synonym.csv)をローカルにダウンロードしておいてください
+2. 次に AWS マネジメントコンソール上で，画面右上のヘッダー部のリージョン選択にて， **[東京]** となっていることを確認します．もし **[東京]** となっていない場合は，リージョン名をクリックして，**[東京]** に変更してください．続いて AWS マネジメントコンソールの画面左上にある [サービス] から **[S3]** のページを開いてください
+3. バケット一覧から，Lab 1 で作成した **"workshop-YYYYMMDD-YOURNAME"** を選択します（YYYYMMDD と YOURNAME は Lab 1 で指定したものに置き換えて考えてください）．続いて画面上部の **[+ フォルダの作成]** ボタンを押して **"package"** と入力し，**[保存]** を押します
+4. 作成された **"package"** フォルダをクリックしたら，**[↑ アップロード]** ボタンを押して，先ほどダウンロードした 2 つのファイルを追加してから，右下の **[アップロード]** ボタンを押してください
+5. 続いて  AWS マネジメントコンソールの画面左上にある [サービス] から **[Elasticsearch Service]** のページを開いてください
+6. 左側メニューの "パッケージ" を選択してから，画面左上の **[インポート]** ボタンを押します．まずはカスタム辞書から登録していきましょう．"名前" に **"custom-dictinoary"**，"パッケージソース" に **"s3://workshop-YYYYMMDD-YOURNAME/package/custom_dictionary.csv"**と入力したら（YYYYMMDD と YOURNAME は Lab 1 で指定したものに置き換えてください），**[インポート]** ボタンを押します
+7. 続いて，遷移した先の画面で **[ドメインへの間蓮付け]** を押してから，"workshop-esdomain" を選択して **[関連付け]** をクリックします．下の画面に戻ると，ドメインのステータスが "関連付け中" になっているでしょう．しばらく待つと "利用可能" に変わります．これを利用するためには，画面上側にある ID （F123456789 のような文字列です）が必要なため，これをいったんどこかにメモしておいてください
+8. 同様に類義語ファイルも登録します．名前" に **"custom-synonym"**，"パッケージソース" に **"s3://workshop-YYYYMMDD-YOURNAME/package/custom_synonym.csv"**と入力して **[インポート]** ボタンを押します．その後，ドメインへの間蓮付けも行なってください
+
+### パッケージを利用した日本語全文検索の実施
+
+それでは，ドメインに関連付けしたパッケージを用いて，Section 2 と同じ結果が得られるかを確認していきたいと思います．
+
+1. Dev tools の Console に対して，以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．先ほど作成した index を削除してしまいます
+
+   ```json
+   DELETE jpdocs
+   ```
+
+2. 続いて新しい index を作成します．"tokenizer" と "filter" で設定する内容が，Section 2 と一部変わっていることを確認してください．パッケージを利用するためには，それぞれ **"analyzers/F0123456789"** という形で，"analyzers/" のあとに先ほどメモしたパッケージ ID をつなげて入力する必要があります．**"F0123456789"** の部分は，それぞれカスタム辞書と類義語のパッケージ ID に置き換えてから，API を実行してください
+
+   ```json
+   PUT jpdocs
+   {
+     "mappings" : {
+       "properties" : {
+         "content" : {
+           "type" : "text",
+           "analyzer": "my_analyzer"
+         }
+       }
+     },
+     "settings": {
+       "index": {
+         "analysis": {
+           "analyzer": {
+             "my_analyzer": {
+               "type": "custom",
+               "tokenizer": "my_kuromoji_tokenizer",
+               "filter": [
+                 "my_synonym",
+                 "ja_stop"
+               ]
+             }
+           },
+           "tokenizer": {
+             "my_kuromoji_tokenizer": {
+               "type": "kuromoji_tokenizer",
+               "mode": "search",
+               "user_dictionary": "analyzers/F0123456789"
+             }
+           },
+           "filter": {
+             "my_synonym" : {
+               "type": "synonym",
+               "synonyms_path": "analyzers/F0123456789"
+             }
+             
+           }
+         }
+       }
+     }
+   }
+   ```
+
+3. 先ほどと同様にデータを追加します
+
+   ```json
+   POST jpdocs/_bulk
+   {"index":{"_index":"jpdocs","_type":"_doc"}}
+   {"content":"近所の地銀に口座を持っている"}
+   {"index":{"_index":"jpdocs","_type":"_doc"}}
+   {"content":"築地銀だこにはしょっちゅう行く"}
+   ```
+
+4. まずは検索クエリを実行して，カスタム日本語辞書が適用されてるか確認しましょう
+
+   ```json
+   GET jpdocs/_search?q=content:"地銀"
+   ```
+
+5. 検索結果に ""築地銀だこにはしょっちゅう行く" が含まれず，1 件だけ返ってきたら，カスタム辞書が適用されているということがわかります
+
+   ```json
+   {
+     "took" : 2,
+     "timed_out" : false,
+     "_shards" : {
+       "total" : 5,
+       "successful" : 5,
+       "skipped" : 0,
+       "failed" : 0
+     },
+     "hits" : {
+       "total" : {
+         "value" : 1,
+         "relation" : "eq"
+       },
+       "max_score" : 0.6931472,
+       "hits" : [
+         {
+           "_index" : "jpdocs",
+           "_type" : "_doc",
+           "_id" : "h6XN5nABdQ_VtJWAXYA2",
+           "_score" : 0.6931472,
+           "_source" : {
+             "content" : "近所の地銀に口座を持っている"
+           }
+         }
+       ]
+     }
+   }
+   ```
+
+6. 同様に次の検索クエリを実行して，類義語が適用されているかを確認します
+
+   ```json
+   GET jpdocs/_search?q=content:"たこ焼き"
+   ```
+
+7. もとの文章に含まれない，以下の検索結果が返ってくることから，ただしく類義語も適用されていることがわかります
+
+   ```json
+   {
+     "took" : 8,
+     "timed_out" : false,
+     "_shards" : {
+       "total" : 5,
+       "successful" : 5,
+       "skipped" : 0,
+       "failed" : 0
+     },
+     "hits" : {
+       "total" : {
+         "value" : 1,
+         "relation" : "eq"
+       },
+       "max_score" : 1.2574185,
+       "hits" : [
+         {
+           "_index" : "jpdocs",
+           "_type" : "_doc",
+           "_id" : "yqX05nABdQ_VtJWAeoAt",
+           "_score" : 1.2574185,
+           "_source" : {
+             "content" : "築地銀だこにはしょっちゅう行く"
+           }
+         }
+       ]
+     }
+   }
+   ```
+
+ここまでみてきたように，カスタム辞書や類義語のファイルを切り出して，パッケージとして登録することで，Amazon ES ドメインと別で管理することができます．特に検索エンジンとして Amazon ES を利用する際に，非常に役に立つ機能といえるでしょう．こちらの機能について，より詳しく知りたい方は[公式ドキュメント](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/custom-packages.html)をご参照ください．
+
+## Section 4: SQL を用いたログ分析
 
 ここまで _search API を直接叩く形の検索クエリの書き方についてみてきました．しかし Elasticsearch のクエリは，JSON の入れ子で記述をする必要があり，書くのに手間がかかってしまいます．こうした問題をカバーするための方法がいくつかあります．例えば Python には，[Elasticsearch DSL](https://elasticsearch-dsl.readthedocs.io/en/latest/) という高レベルのクエリ記述ライブラリや，低レベルのクライアントである [Python Elasticsearch Client](https://elasticsearch-py.readthedocs.io/en/master/) があり，これらを用いることで比較的簡単にクエリを記述・実行することができます．
 
