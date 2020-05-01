@@ -171,37 +171,7 @@ Lab 1 と 2 で説明したように，Amazon ES のデータは基本的に ind
 
 ### Index policy の作成
 
-index の運用ルールを記述した JSON 形式の設定ファイルを，Amazon ES では，index policy と呼びます．index 作成が行われて
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-から 7 日間経過したら，index を自動で削除する index policy を作成していきます．
+index の運用ルールを記述した JSON 形式の設定ファイルを，Amazon ES では，index policy と呼びます．index 作成が行われてから 7 日間経過したら，index を自動で削除する index policy を作成していきます．
 
 1. 画面左側の![kibana_index_management](../images/kibana_index_management.png)マークをクリックして，Index Management のメニューを開きます
 
