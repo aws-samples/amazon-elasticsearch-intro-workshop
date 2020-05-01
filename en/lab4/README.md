@@ -359,7 +359,126 @@ Next, you will set up synonyms. When a user performs a search, it is not always 
 
 In this section, you have tried the usage of synonyms and filters in full-text search. However, only a few part of full-text search features has been tried in this section. Other than the setting you have made in this section, Amazon ES allows you to configure a variety of full-text search settings. Please read the[Elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-tokenizer.html) for more details.
 
-## Section 2: Log Analysis Using SQL
+## Section 2: Apply synonym with file
+
+In the previous section, you learned how to apply synonyms with directly embedding synonyms into mapping templetes. You can use register and use it if you only use small number of synonyms. However, handling millions of synonyms with mapping template is heavy work and hard to manage. In this section, you'll try to import a package of synonym file and associate it to an existing Amazon ES domain.
+
+### Importing package and associate with Amazon ES domain
+
+To use synonym file in Amazon ES domain, you will upload the file to S3 and import it as a package. Then you will associate the imported package with Amazon ES domain.
+
+1. Download [synonym file](./custom_synonym.csv) to your local environment
+2. Open **[S3]** management console 
+3. Choose **"workshop-YYYYMMDD-YOURNAME"** created in Lab1 (replace YYYYMMDD and YOURNAME to appropriate one). Choose **[+ Create foloder]**, type **"package"**, and click **[Save]**
+4. Choose **"package"**, click **[Upload]**, select the synonym file downloaded before, and click **[Upoad]**
+5. Open **[Elasticsearch Service]** management console 
+6. Choose **"package"**, then click **[Import]**
+7. Name **"custom-synonym"**, type **"s3://workshop-YYYYMMDD-YOURNAME/package/custom_synonym.csv"** as a package source, and click **[Import]**
+8. After page transition, click **[Associate to a domain]**, choose "workshop-esdomain", then click  **[Associate]**
+9. Wait a few minutes till domain status will be available
+10. Make a note of ID like F123456789, as you will use it later
+
+### Executing a query in association with synonym package
+
+Now you can execute a query and confirm the effect of synonyms.
+
+1. Copy the following codes to the Dev Tools Console, and click ▶︎ button on the right to execute the API. The index you have created is deleted.
+
+   ```json
+   DELETE mydocs
+   ```
+
+2. Then, create a new index. Confirm that the configuration at filter is not the same with Section 1. Replace "analyzers/**F0123456789**" with the ID you took a note before, then execute the API
+
+   ```json
+   PUT mydocs
+   {
+     "mappings" : {
+       "properties" : {
+         "content" : {
+           "type" : "text",
+           "analyzer": "my_analyzer"
+         }
+       }
+     },
+     "settings": {
+       "index": {
+         "analysis": {
+           "analyzer": {
+             "my_analyzer": {
+               "type": "custom",
+               "tokenizer": "standard",
+               "filter": [
+                 "my_synonym",
+                 "lowercase",
+                 "stop"
+               ]
+             }
+           },
+           "filter": {
+             "my_synonym" : {
+               "type": "synonym",
+               "synonyms_path": "analyzers/F0123456789"
+             }
+           }
+         }
+       }
+     }
+   }
+   ```
+
+3. Add the data as before
+
+   ```json
+   POST mydocs/_bulk
+   {"index":{"_index":"mydocs","_type":"_doc"}}
+   {"content":"Amazon Redshift is a high speed enterprise grade data warehouse service."}
+   {"index":{"_index":"mydocs","_type":"_doc"}}
+   {"content":"Amazon Web Services offers various kinds of analytics services."}
+   ```
+
+4. Execute the search query in the same way
+
+   ```json
+   GET mydocs/_search?q=content:"aws"
+   ```
+
+5. You can get the same search results as the previous section
+
+   ```json
+   {
+     "took" : 4,
+     "timed_out" : false,
+     "_shards" : {
+       "total" : 5,
+       "successful" : 5,
+       "skipped" : 0,
+       "failed" : 0
+     },
+     "hits" : {
+       "total" : {
+         "value" : 1,
+         "relation" : "eq"
+       },
+       "max_score" : 0.8630463,
+       "hits" : [
+         {
+           "_index" : "mydocs",
+           "_type" : "_doc",
+           "_id" : "maUaBnEBdQ_VtJWA-48R",
+           "_score" : 0.8630463,
+           "_source" : {
+             "content" : "Amazon Web Services offers various kinds of analytics services."
+           }
+         }
+       ]
+     }
+   }
+   ```
+
+In this section, you have tried the usage of packages in Amazon ES. You can easily manage your own synonym files separated from Amazon ES domain and its mapping templete. This features is especially useful for full-text search usecase. Please read the [Amazon ES documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/custom-packages.html) for more details.
+
+## Section 3: Log Analysis Using SQL
 
 So far, you have learned how to write a search query that directly executes _search API. However, Elasticsearch query needs to be described by nesting JSON, which is troublesome to write. There are several ways to solve this problem. For example, Python has a high-level query description library called[Elasticsearch DSL](https://elasticsearch-dsl.readthedocs.io/en/latest/) and a low-level client called [Python Elasticsearch Client](https://elasticsearch-py.readthedocs.io/en/master/), those allows you to write and execute queries relatively easily.
 
