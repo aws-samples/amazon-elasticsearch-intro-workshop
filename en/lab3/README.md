@@ -1,49 +1,49 @@
-# Lab 3: Amazon ES の運用管理
+# Lab 3: Operational Management of Amazon ES
 
-前の Lab ではビジュアルの作成や分析といった，Kibana の基本的な使い方を実際に試してきました．この Lab では，権限管理やアラート，index 管理といった，運用管理に関する事柄について，実際に手を動かして試していただきます．
+In the previous Lab, you have been trying out with the basics of using Kibana, such as creating and analyzing visuals of Kibana In this lab, you will try out with some operational managements, such as permission management, alerts, and index management.
 
-## Section 1: Amazon ES の権限管理
+## Section 1: Amazon ES Permissions Management
 
-Lab 1 で Amazon ES をセットアップして，Kibana にログインする際に，ユーザー名とパスワードによる認証がありました．そこではマスターユーザーのアカウントを使ってログインしました．しかし多くのユーザーが Kibana を使って分析を行う際に，同じマスターアカウントを使い回すわけにはいきません．ユーザーごとに個別のアカウントを作成し，さらにユーザーの役割に合わせた限られた権限のみを付与するのが正しいやり方といえます．
+When you have set up Amazon ES in Lab 1 and logged in to Kibana, user authentication with a user name and password were required. In this lab, the master user account was used to login. However, a mere user can't usually use the same master account to perform analyses in Kibana. The correct method is to create a separate account for each user and grant only limited permissions that match the user's role.
 
-そこでこのセクションでは，IoT 事業部のユーザーを想定して，そのユーザーたちだけに先ほど作成したダッシュボードを公開することを考えます．また IoT 事業部のユーザーの中でも，編集権限を持つ開発者と，限られた閲覧権限だけを持つ閲覧者に分けて，それぞれに公開する範囲を制限したいと思います．
+So in this section, it assumes that you are a user of the IoT department and publish the dashboard you have created to those users. In addition, among users of the IoT department, you will separate their permission between developers with write permission and viewers with read-only permission, and set a content boundary for each of them.
 
-### テナントの作成とデータのコピー
+### Creating tenants and copying data
 
-まず，IoT 事業部のユーザーだけに公開するためのスペースを作成したいと思います．限られた人だけに公開する範囲を，Amazon ES の Kibana ではテナントという概念であらわします．デフォルトでは，作成したユーザー自身だけがアクセスできる Private テナントと，全ユーザーに共有される Global テナントがあります．ここに IoT 事業部向けの新しいテナントを追加していきましょう．
+First, you will create a space to open only to users of the IoT department in Kibana. Amazon ES uses the concept of tenants which is the scope to publish to a limited number of people. By default, there are Private tenants that only the user who created them can access, and Global tenants that are shared by all users. Let's add new tenants here for the IoT department.
 
-1. 画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開きます
-2. **"Permissions and Roles"** の下にある **[Tenants]** をクリックして，テナント編集画面に進みます．画面右側の **[+]** ボタンをクリックして，新規テナント作成を行います
-3. **"Tenat name"** に **"IoT"** と入力したら，**[Submit]** を押します
+1. Click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the menu to set security.
+2. Click **[Tenants]** under **"Permissions and Roles"** to go to the screen to edit tenants. Then, click **[+ button]** on the right of the screen to create a new tenant.
+3. Enter **"IoT"** in **"Tenant name"**, and click **[Submit]**.
 
-続いて，既存のインデックスパターン，ビジュアル，そしてダッシュボードデータをエクスポートします．
+Next, export existing index patterns, visuals, and dashboard data.
 
-1. 画面左側メニューの![kibana_management](../images/kibana_management.png)アイコンをクリックして，Management 画面を開き，左側の **[Saved Objects]** をクリックします
-2. 画面に，Lab 2 で作成したインデックスパターン，ビジュアル，ダッシュボードが一覧で表示されます．これらの要素全てにチェックをつけて，右上の [Export] を押してください．これらの設定が書かれた JSON ファイルがダウンロードされます
+1. Click ![kibana_management](../images/kibana_management.png) icon in the left menu to open the Management screen, and then click **[Saved Objects]** in the left.
+2. A list of index patterns, visuals, and dashboards created in Lab 2 are displayed on the screen. Check all of these items, and click [Export] in the top right. A JSON file containing these settings will be downloaded.
 
-次にテナントを切り替えて，データのコピーを行います．
+Then, switch the tenant and copy the data.
 
-1. 画面左側の![kibana_tenants](../images/kibana_tenants.png)マークをクリックして，テナント設定のメニューを開きます．IoT テナントの **[Select]** をクリックして，テナントを切り替えてください
-2. 画面左側メニューの![kibana_management](../images/kibana_management.png)アイコンをクリックして，Management 画面を開き，左側の **[Saved Objects]** をクリックします
-3. 画面右上の **[Import]** ボタンを押して，先ほどの JSON ファイルを選択してアップロードします．これで画面に先ほどのダッシュボードやビジュアルがコピーされました
+1. Click ![kibana_tenants](../images/kibana_tenants.png) icon on the left of the screen to open the tenant settings menu. Then, click **[Select]** for the IoT tenant to switch between tenants.
+2. Click ![kibana_management](../images/kibana_management.png) icon in the left menu to open the Management screen, and then click **[Saved Objects]** in the left.
+3. Click **[Import]** button in the top right of the screen to choose the JSON file in the above and upload it. The dashboard and visuals mentioned in the earlier are now copied to your screen.
 
-### 新しい Amazon ES ロールの作成
+### Creating a new Amazon ES role
 
-次に，IoT 事業部用のユーザーに割り当てるための，Amazon ES の権限セットであるロールを作成します．ここでは，編集権限を持つ開発者と，限られた閲覧権限だけを持つ閲覧者のそれぞれに向けた，2 種類のロールを作成します．まずは開発者用のロール作成からいきます．
+Now, you will create a role that is set of Amazon ES permissions to assign to users for the IoT department. The two types of roles will be created here for developers with write permission and for viewers with read-only permission. First, create a role for developers.
 
-1. 画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開きます
-2. **"Permissions and Roles"** の下にある **[Roles]** をクリックして，ロール管理画面に進んだら，画面右側の **[+]** ボタンをクリックして新規ロール作成メニューを開いてください
-3. **"Role name"** に **"iot_developer_role"** と入力します
-4. 続いて上側の **[index Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add index permissions]** ボタンを押します．**"Index patterns"** に **"workshop-log-*"** と入力します．またその下の **Permissions: Action Groups** で **[crud]** を選択してください
-5. さらに右上の **[Tenant Permissions]** タブを選択して，**[Add tenant permissions]** を押します．"**Tenant patterns**" に **"IoT"** と入力してください．また **"Permissions"** のプルダウンから **[kibana_all_write]** を選択します．あとは **[Save Role Defintion]** ボタンを押して，ロール作成完了です
+1. Click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the security settings menu.
+2. Click **[Roles]** under **"Permissions and Roles"** to go to the role management screen, and click **[+]** button to open the new role creation menu.
+3. Enter **"iot_developer_role"** in **"Role name"**.
+4. Choose **[index Permissions]** tab at the top to open the cluster permissions settings menu, and click **[+ Add index permissions]** button. Enter **"workshop-log-*"** in **"Index patterns"**. Then, choose **[crud]** under **Permissions: Action Groups**.
+5. Choose **[Tenant Permissions]** tab in the top right, and click **[Add tenant permissions]**. Next, enter **"IoT"** in "**Tenant patterns**". From the pull-down menu, choose **[kibana_all_write]** for **"Permissions"**. Then, click **[Save Role Defintion]** button to complete the role creation.
 
-同様に，閲覧者用のロールも作成しましょう．
+In a similar manner, create roles for viewers.
 
-1. ロール管理画面から，画面右側の **[+]** ボタンをクリックします
+1. Click **[+]** button on the right of the role management screen.
 
-2. **"Role name"** に **"iot_reader_role"** と入力します
+2. Enter **"iot_reader_role"** in **"Role name"**.
 
-3. 上側の **[index Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add index permissions]** ボタンを押します．**"Index patterns"** に **"workshop-log-*"** と入力します．その下の **"Permissions: Action Groups"** で **[read]** を選択してください．次の **"Document Level Security Query"** は，以下のような文字列を入力してください．これは workshop-log データのうち，status フィールドが OK のものだけを表示させるようにするための，Elasticsearch クエリです．最後に **"Anonymized fields"** に **"ipaddress"** と入力します．以下に示すような設定結果になります
+3. Choose **[index Permissions]** tab at the top to open the menu to set permission of new cluster, and click **[+ Add index permissions]** button. Next, enter **"workshop-log-*"** in **"Index patterns"**. Choose **[read]** in **"Permissions: Action Groups"** below. Then, enter the following string for **"Document Level Security Query"**. This is an Elasticsearch query to display only workshop-log data which has OK in status field. At last, add **"ipaddress"** in  **"Anonymized fields"**. The following shows the configuration.
 
    ```json
    {
@@ -59,127 +59,127 @@ Lab 1 で Amazon ES をセットアップして，Kibana にログインする�
 
    ![role_iot_reader](../images/role_iot_reader.png)
 
-4. 続いて画面上側の **[Tenant Permissions]** タブを選択して，**[Add tenant permissions]** を押します．"**Tenant patterns**" に **"IoT"** と入力してください．また **"Permissions"** のプルダウンから **[kibana_all_read]** を選択します．あとは **[Save Role Defintion]** ボタンを押して，ロール作成完了です
+4. Choose **[Tenant Permissions]** tab at the top of the screen, and click **[Add tenant permissions]**. Next, enter **"IoT"** in "**Tenant patterns**". Choose **[kibana_all_read]** from the pull-down menu of **"Permissions"**. Then, click **[Save Role Defintion]** button to complete to create the role.
 
-### Kibana ユーザーのセットアップとロールの紐付け
+### Setting up Kibana users and mapping roles
 
-それでは Kibana にログインするためのユーザーを作成しましょう．
+Now, you will create a user to log in to Kibana.
 
-1. 画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開きます
-2. **[Intenral User Database]** ボタンを押して，ユーザー管理のページに進んだら．画面右上の **[+]** ボタンを押して新規ユーザー作成画面を立ち上げます．**"Username"** に **"iot_developer"**，**"Password"** および **"Repeat Password"** に適当な文字列を入力したら，**[Submit]** を押します
-3. 同様に閲覧ユーザーも作成します．画面右上の **[+]** ボタンを押して新規ユーザー作成画面を立ち上げます．**"Username"** に **"iot_reader"**，**"Password"** および **"Repeat Password"** に適当な文字列を入力したら，**[Submit]** を押します
+1. Click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the menu to set security.
+2. Click **[Intenral User Database]** button to go to the user management page. Next, click **[+]** button in the top right of the screen to open the new user creation screen. Enter **"iot_developer"** in **"Username"** and the appropriate string in **"Password"** and **"Repeat Password"**, and then click **[Submit]**.
+3. In a similar manner, create browsing users as well. Click **[+]** button in the top right of the screen to open the new user creation screen. Enter **"iot_reader"** in **"Username"** and the appropriate string in **"Password"** and **"Repeat Password"**, and then click **[Submit]**.
 
-最後に，作成したユーザーと先ほど用意したロールを紐付けましょう．
+At last, associate the created user with the role you have prepared earlier.
 
-1. セキュリティ設定のトップ画面から **[Role Mappings]** ボタンを押します．
-2. 画面右上の **[+]** ボタンを押したら，**"Role"** のプルダウンメニューから，**[iot_developer_role]** を選択します．続いて **"Users"** に先ほど作成したユーザーの名前，**"iot_developer"** を入力してください．最後に **[Submit]** を押して紐付け完了です
-3. 閲覧者についても同様に，画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[iot_reader_role]** を選択します．続いて **"Users"** に**"iot_reader"** を入力して **[Submit]** を押して，紐付けを終わらせてください
-4. さらに Kibana UI を使用するために，Amazon ES 側で事前に定義されている kibana_user ロールを，開発者と閲覧者の両方に付与する必要があります．画面右上の **[+]** ボタンを押し，**"Role"** のプルダウンメニューから，**[kibana_user]** を選択します．続いて **"Users"** に **"iot_developer"** を入力し， **[+ Add User]** ボタンを押して **"iot_reader"** も追加したら，**[Submit]** を押します
+1. Click **[Role Mappings]** button from the top screen of the security settings.
+2. Click **[+]** button in the top right of the screen, and choose **[iot_developer_role from]** from the pull-down menu of **"Role"**. Then, enter the user name **"iot_developer"** you have created earlier into **"Users"**. At last, click **[Submit]** to complete the mapping.
+3. For the viewer, in a similar manner, click **[+]** button in the top right of the screen, and choose **[iot_reader_role]** from the pull-down menu of **"Role"**. Then, enter **"iot_reader"** in **"Users"**, and click **[Submit]** to complete the mapping.
+4. In addition, to use the Kibana UI, you must grant both developers and viewers a predefined kibana_user role on Amazon ES. Click **[+]** button in the top right of the screen, and choose **[kibana_user]** from the pull-down menu of **"Role"**. Then, enter **"iot_developer"** in **"Users"**, click **[+ Add User]** button to add **"iot_reader"**, and click **[Submit]**.
 
-以上でテナントの作成，ロールとユーザーの作成，紐付けまで完了しました．それでは実際に，作成したユーザーでログインしてみて，想定した通りの権限が許可されているかを確認してみましょう
+Now, you have completed the tasks of tenants creation, roles and users creation and the mapping. Then, let's try logging in as the user you have created, and then make sure that the permissions are working as expected.
 
-### 作成したユーザでログインして権限の確認
+### Log in as the user you created and check the permissions
 
-まずは iot_developer でログインしてみましょう．
+First, you will log in with iot_developer.
 
-1. Kibana 画面の右上にあるユーザー名 **[awsuser]** をクリックして，Kibana から一旦ログアウトしてください．ログイン画面に戻ったら，先ほど作成した iot_developer のアカウントでログインしてください
-2. ログイン後の画面左側メニューに![kibana_security](../images/kibana_security.png)マークがないことが確認できるでしょう．iot_deveoper ユーザーは管理者権限を持っていないため，このメニューにアクセスできません
-3. 画面左側の![kibana_tenants](../images/kibana_tenants.png)マークをクリックして，テナント設定のメニューを開きます．IoT テナントの **[Select]** をクリックして，テナントを切り替えてください
-4. それから Discover，Visualize，Dashboards 等にアクセスでき，かつ検索やビジュアルの作成ができることを確かめてください
+1. Click the user name **[awsuser]** in the top right of the Kibana screen, and temporarily log out from Kibana. Go back to the login screen, and log in with the iot_developer account you have created.
+2. You can confirm that there is no ![kibana_security](../images/kibana_security.png) icon in the left menu of the screen after logging in. The iot_deveoper user cannot access this menu because it does not have the administrator credential.
+3. Click ![kibana_tenants](../images/kibana_tenants.png) icon on the left of the screen to open the tenant settings menu. Then, click **[Select]** for the IoT tenant to switch between tenants.
+4. Make sure you have access to such as Discover, Visualize, and Dashboards, and you can search and create visuals.
 
-次に iot_reader でログインしてみます．
+Next, you will try logging in with iot_reader.
 
-1. Kibana 画面の右上にあるユーザー名 **[iot_developer]** をクリックして，Kibana から一旦ログアウトしてください．ログイン画面に戻ったら，先ほど作成した iot_reader のアカウントでログインしてください
-2. 画面左側の![kibana_tenants](../images/kibana_tenants.png)マークをクリックして，テナント設定のメニューを開きます．IoT テナントの **[Select]** をクリックして，テナントを切り替えてください
-3. Discover ページを開いて，対象データの時間範囲を適当に調整し，データを表示させてください．以下のように，ip_address カラムがハッシュ化されているのが確認できます．これは先ほど作成した iot_reader_role の anonymized fields にこの ipaddress カラムを指定していたためです．
+1. Click the user name **[iot_developer]** in the top right of the Kibana screen, and temporarily log out of Kibana. Go back to the login screen, and log in with the iot_reader account you have created.
+2. Click ![kibana_tenants](../images/kibana_tenants.png) icon on the left of the screen to open the tenant settings menu. Then, click **[Select]** for the IoT tenant to switch between tenants.
+3. Open the Discover page, adjust the time range of the target data appropriately, and display the data. You can see that the ip_address column is hashed as follows. This is because the ipaddress column was specified in the anonymized fields of iot_reader_role you have created earlier.
    ![document_anonymized](../images/document_anonymized.png)
-4. また，Dashoboards ページを開くと，以下のように "Percentage of Status" が OK のものしかないのがみて取れるかと思います．これも status カラムが OK のもののみを閲覧可能とするように設定していたためです．また IP アドレスがハッシュ化されているため，Private IP とそれ以外の時系列推移も，グラフが表示されていません
+4. Also, when you open the Dashboards page, you can see that “Percentage of Status” is OK as shown below. This is because it was set to be able to view only that the status column has OK. Also, because the IP address is hashed, Private IP and other time sequence transitions are not displayed in the graph.
    ![dashboard_filtered](../images/dashboard_filtered.png)
 
-ここまでの確認が完了したら，iot_reader からログアウトして，**再度 Lab1 で作成したマスターユーザーで Kibana にログインし直して**ください．Section 2 以降を進めるために必須となります．
+Once you have completed this confirmation, log out of iot_reader, and then **log back in to Kibana as the master user created in Lab1**. It is mandatory to proceed with Section 2 or later.
 
-## Section 2: Amazon SNS へのアラートの送信
+## Section 2: Sending Alerts to Amazon SNS
 
-Amazon ES でできることは，ダッシュボードを用いて可視化するだけではありません．特定の数値が基準を超えた場合に，通知を飛ばして対応を促すと言ったこともできます．例えば機器ログの収集を行っている場合に，ステータスがエラーのログが一定数以上来たら，管理者にアラートメールを送るといったパターンが考えられます．そこでここでは，Lab 1 で設定した SNS トピックに対して，実際に通知を飛ばしてみたいと思います．
+Amazon ES offers more functionality than just visualizing data using dashboards. When a certain data exceeds the predefined criteria, it can send the notification and prompt you to respond too. For example, if you are collecting logs from your equipments, you may want to send an alerting email to the administrator when the status of the error was recorded more than a predefined time. Therefore, let's try to send the notification to the SNS topic set in Lab 1 here.
 
-Amazon ES におけるアラートの仕組みは以下の通りです．今回の例では，監視対象のメトリクスとしてログに含まれる FAIL ステータスの数を 1 分おきに監視します．そして 1 分間に FAIL ステータスを含んだログが 2 回以上得られたら，アクションとして SNS トピック経由でアラートメールを送信する，という流れになります．
+The mechanism of alerts on Amazon ES as follows. In this example, you will monitor the number of FAIL statuses in the log in the metric every minute. Here, if you receive more than one log with FAIL status in a minute, you can send an alert email via SNS topic as an action.
 
 ![alerm_flow](../images/alerm_flow.png)
 
-### Destination の設定
+### Destination Settings
 
-まず最初に，アクションの送信先の設定を行います．ここでは，Lab 1 で作成した SNS トピックを送信先に指定します．
+First, set the destination of the action. Here, specify the SNS topic created in Lab 1 as the destination.
 
-1. 画面左側の![kibana_alerm](../images/kibana_alerm.png)マークをクリックして，Alerting のメニューを開きます
-2. メニューから **[Destinations]** タブを選択して，右側の **[Add destination]** ボタンを押します
-3. **"Name"** に **"Amazon ES alert topic"** と入力します．**"Type"** プルダウンから **[Amazon SNS]** を選択してください．**"Settings"** の **"SNS Topic ARN"** および **"IAM role ARN"** には，Lab 1 で作成した SNS トピックと IAM ロールの ARN を入れてください
-   - **SNS Topic ARN**: `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` のような文字列
-   - **IAM role ARN**: `arn:aws:iam::123456789012:role/amazones_sns_alert_role`のような文字列
-4. **[Create]** ボタンを押します 
+1. Click ![kibana_alerm](../images/kibana_alerm.png) icon on the left of the screen to open the Alerting menu.
+2. Choose **[Destinations]** tab from the menu, and click **[Add destination]** button.
+3. Enter **"Amazon ES alert topic"** in **"Name"**. Choose **[Amazon SNS]** from the **"Type"** pull-down menu. Enter SNS topic you have created in Lab 1 and IAM role ARN to **"SNS Topic ARN"** and **"IAM role ARN"** in **"Settings"**.
+   - **SNS Topic ARN**: The string should be look like `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert`
+   - **IAM role ARN**: The string should be look like `arn:aws:iam::123456789012:role/amazones_sns_alert_role`
+4. Click **[Create]** button.
 
-### Monitor の設定
+### Monitor Settings
 
-次に Monitor 機能で監視対象のメトリクス，および頻度を設定します．ここでは送られてくるログの status フィールドの値が FAIL である回数を，1 分に 1 回カウントします．
+Now, you will set the metrics and frequency for monitoring in the Monitor function. Here, you will count the number of FAIL in the status field in the log, once per minute.
 
-1. 画面左側の![kibana_alerm](../images/kibana_alerm.png)マークをクリックして，セキュリティ設定のメニューを開きます
-2. メニューから **[Monitors]** タブを選択して，右側の **[Create monitor]** ボタンを押します
-3. Monitor 作成画面が開いたら，**"Monitor name"** に **"FAIL status monitor"** と入力します．続けて **"Define monitor"** カテゴリの中で，**"Index"** に **"workshop-log-*"** と入力，**"Time field"** として **[timestamp]** を選びます．次に **"Create a monitor for"** のクエリを，`WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` とします．すべて設定すると以下のようになります
+1. Click ![kibana_alerm](../images/kibana_alerm.png) icon on the left of the screen to open the security settings menu.
+2. Choose **[Monitors]** tab from the menu, and click **[Create monitor]** button on the right.
+3. After opening the Monitor creation screen, enter **"FAIL status monitor"** in **"Monitor name"**. Then, enter **"workshop-log-*"** in **"Index"** within **"Define monitor"**, and choose **[timestamp]** as **"Time field"**. Then, set `WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` to the query of  **"Create a monitor for"**. After setting it all, you can see as follows.
    ![monitor_setting](../images/monitor_setting.png)
-4. **[Create]** ボタンを押して Monitor を作成します．Monitor を作成すると，そのまま Trigger の作成画面に遷移します
+4. Click **[Create]** button to create a Monitor. After creating a Monitor, move to the Trigger creation screen.
 
-### Trigger の設定
+### Trigger Settings
 
-続けて Trigger のセットアップを行なっていきましょう．ここでは，FAIL ステータスが 2 回以上あったらアラートをあげるとします．
+Now, you will set up Trigger. Here, you assume that you want to alert if there is more than one FAIL status.
 
-1. **"Trigger name"** に **"FAIL count trigger"** と入力します．**"Severity level"** は **[3]** にしておきましょう．**"Trigger condition"** を`IS ABOVE 1` とします．これにより，1 より上 = 2 回のアラートが上がった時に，トリガーが発動します
+1. Enter **"FAIL count trigger"** in **"Trigger name"**.Set **[3]** for **"Severity level"**. Then, set `IS ABOVE 1` in **"Trigger condition"**．This triggers the alert when it is raised more than 1, that is 2 times.
 
-2. 次に下側の **"Configure actions"** に進みます．**"Action name"** に **"Too many FAIL notification"** と入力します．"Destination" のプルダウンから，先ほど作成した **[Amazon ES alert topic - (Amazon SNS)]** を選択してください．**"Message subject"** は **"FAIL ステータスのレコード数が閾値を超えました"** としましょう
+2. Go to **"Configure actions"** at the bottom. Enter **"Too many FAIL notifications"** in **"Action name"**. From the “Destination” pull-down menu, choose **[Amazon ES alert topic - ( Amazon SNS)]** you have created. Then set **"The record number of FAIL status exceeds over that the threshold"** to **"Message subject"**.
 
-3. "Message" は，最初かあるメッセージを消して，以下の内容に置き換えてください
+3. Replace “Message” with the following content by deleting the first message.
 
    ```
-   監視項目 {{ctx.monitor.name}} でアラートが検出されました．状況を確認してください．
-   - トリガー: {{ctx.trigger.name}}
-   - 緊急度: {{ctx.trigger.severity}}
-   - 集計開始時刻: {{ctx.periodStart}}
-   - 集計終了時刻: {{ctx.periodEnd}}
+   An alert was detected on the monitor item {{ctx.monitor.name}}.Please check the status.
+   - Trigger: {{ctx.trigger.name}}
+   - Severity: {{ctx.trigger.severity}}
+   - Aggregation start time: {{ctx.periodStart}}
+   - Aggregation end time: {{ctx.periodEnd}}
    ```
 
-4. **[Create]** ボタンを押して，Trigger を作成します
+4. Click **[Create]** button to create the Trigger.
 
-以上で設定は完了です．
+Then, the setting for Trigger has been completed.
 
-### 結果の確認
+### Reviewing Results
 
-FAIL status monitor のページを開くと，History のところにアラートの履歴が表示されているのが確認できるでしょう．
+You can see that the history of the alert is displayed in History when you open the FAIL status monitor page.
 
 ![alert_history_normal](../images/alert_history_normal.png)
 
-また数分間待つと，アラートメッセージが設定したメールアドレスに届くとともに，アラート履歴にも Triggered が表示されます．
+After a few minutes, an alert message will be sent to the set email address and Triggered will be displayed in the alert history.
 
 ![alert_history_triggered](../images/alert_history_triggered.png)
 
-またアラートが上がると，**[Dashboard]** タブのリストにアラートが表示されるので，左側のチェックボックスを選択して，右の **[Acknowledge]** ボタンを押すことで，アラートを止めることができます．ただ，同様の状況が発生するとまた新たなアラートが上がってきてしまい，メールも送られ続けるため，確認が終わったら **[Monitors]** タブから，作成した Monitor のチェックボックスを選択して，**[Actions]** ボタンの **[Disable]** をクリックしてください
+When alerting, the alert is displayed in the list on **[Dashboard]** tab. After checking the check box on the left, and you can stop the alert by clicking **[Acknowledge]** button. However, if a similar situation occurs, a new alert will be raised and emails will continue to be sent. So when you are completed reviewing, choose the check box for the created Monitor from **[Monitors]** tab, and click **[Disable]** in **[Actions]** button.
 
-## Section 3: index の管理
+## Section 3: Managing Index
 
-Lab 1 と 2 で説明したように，Amazon ES のデータは基本的に index という単位で管理されます．このワークショップでは，Firehose からログを挿入する際に，格納先の index 名を定期的に新しいものにしていくやり方をとっています．Lab 2 で実施してきたようなログ分析のユースケースでは，通常最近のデータは頻繁に処理対象になりますが，一定の時間が経ったデータは滅多にアクセスされなくなるのが一般的です．
+As described in Lab 1 and Lab 2, Amazon ES data is basically managed by index units. In this workshop, when inserting logs from Firehose, the index name of the destination is changed periodically. In a log analysis use case like Lab 2, recent data is usually processed frequently. However stale data saved long time ago rarely get any access.
 
-今回のように 1 時間ごとに新しい index が作成される場合，滅多にアクセスされない大量の古い index を保存するために，大きなディスク容量が必要となってしまいます．そこで古い index を自動で削除できるように設定したいと考えるのは自然でしょう．また大量のアクセスがあった場合に，index サイズが膨れ上がってしまい，分析のパフォーマンスに影響を及ぼすことも考えられます．その場合，一定サイズを超えたら新しい index を自動的に作成して，そちらに書き込みを行えると，Amazon ES を安定して運用できるでしょう．
+If a new index is created every hour like this lab, a large amount of disk space is demanded to store a large number of old indexes that rarely get access. Naturally, old index are configured to deleted automatically. Also, if large amount of access hit a server, the index size may increase. This may affect the performance of the analysis. In such case, you can create a new index automatically when it exceeds a certain size. And writing to the new index would be stable the operation of Amazon ES.
 
-このような index 管理を可能とする機能として，Amazon ES には Index State Management という機能があります．ここでは，新しい index が生成されてから 7 日間経ったら，自動でログを削除するような設定を適用したいと思います．
+Amazon ES has Index State Management feature which enables sthe index management as described. Now, let’s apply a setting that automatically deletes the log after 7 days after the index is generated.
 
-### Index policy の作成
+### Creating Index Policy
 
-index の運用ルールを記述した JSON 形式の設定ファイルを，Amazon ES では，index policy と呼びます．index 作成が行われてから 7 日間経過したら，index を自動で削除する index policy を作成していきます．
+The JSON format configuration file describing the operation rules is called index policy in Amazon ES. You will create an index policy that automatically deletes the index in 7 days passed after the index is created.
 
-1. 画面左側の![kibana_index_management](../images/kibana_index_management.png)マークをクリックして，Index Management のメニューを開きます
+1. Click ![kibana_index_management](../images/kibana_index_management.png) icon on the left of the screen to open the Index Management menu.
 
-2. 左側メニューの **[index policies]** のメニューを選択した状態で，右の **[Create policy]** ボタンを押します
+2. Choose **[index policies]** menu from the left menu, and click **[Create policy]** button on the right.
 
-3. **”Policy ID"** に **"delete_after_1week"** と入力してください
+3. Enter **"delete_after_1week"** in **”Policy ID"**.
 
-4. すでにデフォルトのポリシーが記述されていますが，今回はこれを使いません．以下の内容をコピーして，**"Define policy"** に貼り付けてください．シンプルな記述なので，みていただければ意味は大体理解できるかと思います
+4. The default policy is already entered, but you will not use it at this time. Copy and paste the following contents into **"Define policy"**. The below are simple statements. It is self-descriptive and you should be able to understand the content.
 
    ```json
    {
@@ -217,37 +217,37 @@ index の運用ルールを記述した JSON 形式の設定ファイルを，Am
    }
    ```
 
-5. **[Create]** ボタンを押して，ポリシーを作成します
+5. Click **[Create]** button to create the policy.
 
-### Index policy を既存の index に適用
+### Apply Index policy to an existing index
 
-作成したポリシーを実際に既存の index に適用しましょう．
+Now, you will apply the policy you created to an existing index.
 
-1. 左側メニューで **"Indices"** を選択します．index の一覧から，**[workshop-log-2020-04-01-09]** のような（日付部分は，ワークショップの実施時間に合わせた異なる値が入ります）index について，左側チェックボックスを選択してから左上の **[Apply policy]** ボタンを押します
-2. ポップアップが出たら，先ほど作成した **"delete_after_1week"** を選択して，**[Apply]** ボタンを押します
-3. 左側メニューの **[Managed Indices]** を選択すると，index に ポリシーが適用されているのが確認できるかと思います
+1. Choose **"Indices"** in the left menu. From the list of index, choose the index sucn as **[workshop-log-2020-04-01-09]** (the date part contains different values depending on the time of the workshop.), check the check box on the left, and then click **[Apply policy]** button on the top left.
+2. When the pop-up menu is displayed, choose  **"delete_after_1week"** you have created, and click **[Apply]** button.
+3. You can see the policy is applied to the index when choosing **[Managed Indices]** on the left menu.
 
-### Index policy を今後作成される index に適用
+### Apply Index policy to future indexes
 
-上で試したやり方だと，既存の index に対してポリシーを適用することはできますが，今後新しく作られるポリシーに対しての設定をあらかじめ行うことはできません．index が作られるごとに毎回手動でこの設定を行うのは面倒なので，ポリシーが自動適用されるように設定を変更しましょう
+Using the method above, you can apply a policy to an existing index, but you cannot set it to a new policy in advance. It is hard to set this manually every time an index is created. So improve the configuration, so that the policy is automatically applied.
 
-この設定を適用するためには，Elasticsearch の API を直接叩く必要があります．そこで API を叩くための Dev Tools と呼ばれる UI を使用します．
+To apply this configuration, you need to directly call the Elasticsearch API. You can use a UI called Dev Tools to call this API.
 
-1. 画面左側の![kibana_devtools](../images/kibana_devtools.png)マークをクリックして，Dev tools のメニューを開きます
+1. Click ![kibana_devtools](../images/kibana_devtools.png) icon on the left of the screen to open the Dev tools menu.
 
-2. 下の **"Console"** にあらかじめ書かれている内容をそのまま残しておいて，1 行空けてその下に，以下の内容をコピーしてください．これは，**"workshop-log-*"** に適合するすべての index に対して，作成時に自動で **"delete_after_1week"** ポリシーを適用する，というものです
+2. Leave the contents previously written in **"Console"** below, leave one line free, and copy the following codes below it. This means that **"delete_after_1week"** policy is applied automatically when it is created for all indexes applied to **"workshop-log-*"**.
 
    ```json
    PUT _template/index_policy_templete
    {
-     "index_patterns": ["workshop-log-*"], 
+     "index_patterns": ["workshop-log-*"],
      "settings": {
-       "opendistro.index_state_management.policy_id":  "delete_after_1week" 
+       "opendistro.index_state_management.policy_id":  "delete_after_1week"
      }
    }
    ```
 
-3. コピーしたコマンドの右側に表示される ▶︎ ボタンを押して，API を実行してください，以下のような結果が右側の画面に表示されたら成功です
+3. Click ▶ ︎button on the right of the copied command, and execute the API. When the following result is displayed on the right screen, it is successful.
 
    ```json
    {
@@ -257,7 +257,7 @@ index の運用ルールを記述した JSON 形式の設定ファイルを，Am
 
    ![console_put_templete](../images/console_put_templete.png)
 
-4. 新しい index は 1 時間に一度しか作られないため，ここでは手動で新しい index を作成してみましょう．**"Console"** の内容をそのままに，1 行空けて次の内容をコピーし， ▶︎ ボタンを押してください
+4. A new index can only be created once an hour, so let's create a new index manually. Leave the contents of **"Console"** as it is, leave one line free to copy the following codes, and then click ▶︎ button.
 
    ```json
    POST workshop-log-policy-test/1
@@ -266,7 +266,7 @@ index の運用ルールを記述した JSON 形式の設定ファイルを，Am
    }
    ```
 
-5. 次のような内容が表示されれば，無事新しい index が作成されました
+5. When the following are displayed, you have successfully created a new index.
 
    ```json
    {
@@ -283,16 +283,16 @@ index の運用ルールを記述した JSON 形式の設定ファイルを，Am
      "_seq_no" : 0,
      "_primary_term" : 1
    }
-   
+
    ```
 
-6. 実際に新しい index にポリシーが適用されてるか確認するため，画面左側の![kibana_index_management](../images/kibana_index_management.png)マークをクリックして，Index Management のメニューを開いてください
+6. To confirm that the policy is actually applied to the new index, click ![kibana_index_management](../images/kibana_index_management.png) icon on the left of the screen to open the Index Management menu.
 
-7. 左側メニューの **[Managed Indices]** を選択すると，以下のように今作成した index に対して policy が適用され，Initializing ステータスであることが確認できるかと思います．以後新しく作られる，**"workshop-log-*"** 形式の index には，このポリシーが適用されます
+7. When choosing **[Managed Indices]** from the left menu, you can confirm that the policy is applied to the index and it is in the Initializing status. This policy will be applied to newly created indexes with the **"workshop-log-*"** format from now on.
    ![index_auto_policy_attachment](../images/index_auto_policy_attachment.png)
 
-以上で index の管理の説明は終わりです．今回は非常に簡単なポリシーを試しましたが，実際にはもっと幅広いポリシーを設定することが可能です．詳細は[こちら](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/ism.html)をご確認ください
+This concludes the description of managing index. In this time, very simple policy was created. You can actually set a wider range of policies. Please click [here](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/ism.html) for more information.
 
-## まとめ
+## Summary
 
-Lab 3 では，Amazon ES の運用管理に関わるさまざまな機能について，実際に試してきました．非常に多くのことを簡単に管理できることが帆理解いただけたかと思います．それでは次の [Lab 4](../lab4/README.md) で，より高度な Amazon ES の使い方についてみていきましょう
+In Lab 3, you have completed to try out various features involving managing Amazon ES operations. Now, you know that you can easily manage many features. Let's move onto to the next [Lab 4](../lab4/README.md), and learn more advanced features of Amazon ES.

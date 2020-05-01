@@ -1,62 +1,62 @@
-# Lab 1: 環境のセットアップ
+# Lab 1: Setting Up Your Environment
 
-この Lab では，他の Lab で必要となる環境のセットアップを行います．この章で構築するシステムの全体像は以下の通りです．
+In this Lab, you will set up the environment required for the following Labs. The architecture of the system that you will configure in this Lab1 is as follows.
 
 ![architecture](../images/architecture.png)
 
-このシステムでは，Kinesis Data Generator という JavaScript ベースのツールを用いて分析用のログを生成します．このツールでは，ログを送信するための認証/認可を，Amazon Cognito というサービスを用いて行います．その上で Generator から所定フォーマットのログを，Amazon Kinesis Firehose（以下 Firehose）というログ集約サービスに送ります．Firehose に送られたデータは，指定した間隔でデータをまとめて Amazon Elasticsearch Service（以下 Amazon ES）に書き込まれます．Amazon ES には Kibana と呼ばれる，ブラウザベースの可視化・分析ソフトウェアが同梱されています．この Kibana を用いて，ブラウザから実際にログの可視化・集計処理を行っていきます．また Amazon ES でデータの監視を行い，問題が起きた場合には，Amazon Simple Notification Service（以下 Amazon SNS）という通知サービスに対してアラートを飛ばします．
+This system uses a JavaScript based tool called Kinesis Data Generator to generate logs for analysis. This tool performs authentication and authorization for sending logs using a service called Amazon Cognito. Then, Kinesis Data Generator sends logs with the designated format to a log aggregation service called Amazon Kinesis Firehose (hereafter, Firehose). Logs sent to Firehose are written in Amazon Elasticsearch Service (hereafter, Amazon ES) after collecting data with designated intervals. Amazon ES bundles browser-based visualization and analysis software called Kibana. Using this Kibana, you will perform visualization and aggregation of logs from the browser. Amazon ES monitors data and send alerts to a notification service called Amazon Simple Notification Service (hereafter, Amazon SNS) in case of any issues.
 
-## Section 1: Amazon ES のドメイン作成
+## Section 1: Creating an Amazon ES Domain
 
-まずは，Amazon ES のドメインを作成します．Amazon ES では，Elasticsearch クラスターのことをドメインと呼びます．ドメイン作成の処理を行うと，裏で新しく仮想マシンが立ち上がり，Elasticsearch クラスターのセットアップが始まります．
+In this section, you will create an Amazon ES domain. In Amazon ES, Elasticsearch clusters are called domains. When the process of domain creation is performed, a new virtual machine starts up in the backend, and then the setup for Elasticsearch cluster will start.
 
 ![architecture_amazones](../images/architecture_amazones.png)
 
-### Amazon ES のドメイン作成
+### Creating an Amazon ES Domain
 
-1. AWS マネジメントコンソールにログインします．ログイン後，画面右上のヘッダー部のリージョン選択にて， **[東京]** となっていることを確認します．もし **[東京]** となっていない場合は，リージョン名をクリックして，**[東京]** に変更してください
-2. AWS マネジメントコンソールの画面左上にある [サービス] を押してサービス一覧を表示させ，**[Elasticsearch Service]** を選択してください（画面上部の検索窓に **"elasticsearch"** などと打ち込むことで，サービスを絞り込むことが可能です）．Elasticsearch の画面を開いたら **[Create a new domain]** ボタンを押して，ドメイン作成画面に進みます
-3. **"Step 1: デプロイタイプの選択"** において，**"デプロイタイプの選択"** で **[開発およびテスト]** を選択します．バージョンは変更せず，そのまま **[次へ]** を押してください
-4. **"Step 2: ドメインの設定"** で，**"Elasticsearch ドメイン名"** に **"workshop-esdomain"** と入力します．それ以外の箇所は変更せずに **[次へ]** を押してください
-5. **"Step 3: アクセスとセキュリティの設定"** で，**"ネットワーク構成"** を **[パブリックアクセス]** に設定します．続いて **"細かいアクセスコントロール"** で，**[マスターユーザーの作成]** を選択してください．ここで設定マスターユーザーのアカウントは，Amazon ES 上の可視化ツール Kibana にログインするために使われます．インストラクションに従って任意の **マスターユーザー名** および **マスターパスワード** を入力してください．マスターユーザー名は 1-16 文字の間で設定する必要があります．またマスターパスワードは 8 文字以上，かつ大文字，小文字，数字，および特殊記号をそれぞれ一つずつ含む形で入力してください．ここで設定したユーザー名，パスワードは Section 3 で使用します
-6. 次にアクセスポリシーの項目を設定します．[こちら](https://www.cman.jp/network/support/go_access.cgi)にアクセスして，自身の IP を確認してください．続いて **"ドメインアクセスポリシー"** で **[カスタムアクセスポリシー]** を選択し，その下の項目で **[IPv4 アドレス]** を選びます．その右の空欄に，先ほど確認した自身の IP をそのまま入力し，その右を **[許可]** に設定します．ここまで設定したら，画面一番下の **[次へ]** を押してください
+1. Log in to the AWS Management Console. After logging in, confirm that **[N. Virginia]** is chosen by the region selector in the right of the header in the console screen. If **[N. Virginia]** is not chosen, click the region name and change to **[N. Virginia]**.
+2. Click [Services] in the top left of the AWS Management Console to display a list of services, and choose **[Elasticsearch Service]** (The search window in the top of the condole screen allows you to narrow down the service by entering such as **"elasticsearch"**). Go to Elasticsearch, click **[Create a new domain]** button to proceed to the domain creation.
+3. In **"Step 1: Choose deployment type"**, choose **["Development and testing"]** in **"Deployment type"**. Do not change the version, and click **[Next]**.
+4. In **"Step 2: Configure domain"**, enter **"workshop-esdomain"** in **"Elasticsearch domain name"**. Do not change the rest, and click **[Next]**.
+5. In **"Step 3: Configure access and security"**, choose **[Public access]** in **"Network configuration"**. Then, choose **[Create master user]** in in **"Fine–grained access control"**. The master user account you will created here is used to log in to the visualization tool Kibana on Amazon ES. Enter any **master user name** and **master password** by following the instructions. The master user name must be between 1 and 16 characters. The master password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character. The user name and password you set here will be used in Section 3.
+6. Next, set an access policy. Click [here](https://www.cman.jp/network/support/go_access.cgi) to confirm your IP address. Then, choose **[Custom access policies]** in **Domain access policy**, and choose **[IPv4 address]** in the item below. In the blank to the right, enter your IP address that you have confirmed in the above, and choose **[Allow]** on the right item. Click **[Next]** at the bottom of the screen after setting up to here.
    ![access_policy](../images/access_policy.png)
-7. **"Step 4: 確認"** で，これまでの設定内容を眺めて，特に問題がなければ画面右下の **[確認]** を押してドメインを作成してください．ドメイン作成には 15 分程度かかりますので，その間に次の Firehose ストリーム作成に進みます
+7. In **"Step 4: Review"**, review the settings you have made in the above, and if there is no concern to them, click **[Confirm]** at the bottom right of the screen to create the domain. It takes approximately 15 minutes to create the domain. Meanwhile, move onto a Firehose stream creation in Section 2.
 
-### 解説: Amazon ES について
+### Explanation: About Amazon ES
 
-今回のハンズオンでは，あくまでお試しということで 1 台だけで Elasticsearch を立てています．ですが本来，Elasticsearch は複数台のマシンでクラスターを組むことで，大規模データを扱ったり，高い可用性を得たりできるものです．そこで本番運用する際の Amazon ES では，クラスターの管理を行う専用のマスターノードを複数台，また実際のデータを格納するデータノードも複数台用意します．
+In this hands-on, Elasticsearch has been configured with only one machine due to just a trial. However, Elasticsearch essentially can handle large data and obtain high availability by configuring clusters on multiple machines. Therefore, when running Amazon ES in production, prepare multiple master nodes dedicated to managing clusters as well as multiple data nodes to store actual data.
 
-Amazon ES における典型的な Easticsearch クラスターの構成は，以下のものになります．AWS リージョンにある 3 つ以上の Availability Zone（以下 AZ）にノードを分散させて，どこかひとつの AZ で障害が起こっても，クラスターを動かし続けられるような，可用性の高い形になります．自分で EC2 上に，このような構成の Elasticsearch クラスターを立てたり，ソフトウェアのバージョンアップや設定の変更を行ったりするのは，非常に骨が折れる作業です．Amazon ES を用いることで，このような構成をわずか数クリックで立ち上げることができるようになります．
+A typical Easticsearch cluster in Amazon ES consists of the following. Distribute nodes across three or more Availability Zones (hereafter AZ) in an AWS Region to keep the cluster running in a highly available in the event of a failure in a single AZ. Setting up your own Elasticsearch cluster with this configuration on EC2, and upgrading software and changing its settings can be a very hard task. But you can launch it with such a configuration with only for a few clicks using Amazon ES.
 
 ![amazones_high_availability](../images/amazones_high_availability.png)
 
-マスターノードはデータノードと同居させることもできますが，大規模なクラスターや負荷の高いワークロードの場合は，クラスター管理だけを行う専用のマスターノードを用意するのが推奨です．またマスターノードについては，3 台以上の奇数で設定することが推奨されています．Amazon ES では 3 または 5 台を選択することができます．なぜ偶数ではダメなのか，についての詳細については[公式ドキュメント](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/es-managedomains-dedicatedmasternodes.html) をご覧ください．
+The master node can be cohabitation with the data node, however in case of large clusters or heavy workloads, it is recommended to provide a dedicated master node that only manages the cluster. For the master node, it is recommended to be set with odd number of 3 units number or more. In Amazon ES, you can choose 3 or 5 units for the master node. For more information of the reason why even numbers cannot be used,  please see [the official document](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/es-managedomains-dedicatedmasternodes.html).
 
 
 
-## Section 2: Firehose のストリーム作成
+## Section 2: Creating a Firehose Stream
 
-続いて Amazon ES にログを挿入するために使用する，Firehose ストリームを作成します．
+In this section, you will create a Firehose stream that you can use to insert logs into Amazon ES.
 
 ![architecture_firehose](../images/architecture_firehose.png)
 
-### Firehose のストリーム作成
+### Creating a Firehose Stream
 
-1. 先ほどと同様，画面右上のヘッダー部のリージョン選択にて， **[東京]** となっていることを確認します．もし **[東京]** となっていない場合は，リージョン名をクリックして，**[東京]** に変更してください．続いて AWS マネジメントコンソールの画面左上にある [サービス] から **[Kinesis]** のページを開いてください
-2. 画面真ん中の **[今すぐ始める]** ボタンを押して，開始チュートリアルページに進みます．メニュー右上の **[配信ストリームの作成]** ボタンを押して，Firehose ストリームの作成ページを開いてください
-3. **"Step 1: Name and source"** では，**"Delivery stream name"** に **"workshop-firehose"** と入力します．他の設定は変更せずに **[Next]** を押してください
-4. **"Step 2: Process records"** は特に何も変更せず，**[Next]** を押してください
-5. **"Step 3: Choose a destination"** で，**"Destionation"** として **[Amazon Elasticsearch Service]** を選択します．次に **"Amazon Elasticsearch Service destination"** の **"Domain"** で，先ほど作成した **[workshop-esdomain]** を選択してください．これで，先ほどの Amazon ES に対して自動でログを挿入することができるようになります．Domain が Processing のステータスの場合は，選択可能になるまで待ってください
-6. 次に **"Index"** で **"workshop-log"** と入力してください．Amazon ES の Index は，非常に噛み砕いた例えをするなら DB でいうところのテーブルに相当するものですが，この Firehose ストリームから送られたログは workshop-log という index に挿入されることになります．挿入時に Amazon ES 側に Index が存在しない場合には，自動で Index が作成されます
-7. また **"Index rotation"** でプルダウンから **[Every hour]** を選択してください．この設定を行うことで，新しい index が 1 時間ごとに作成されます．index 名も "workshop-log-2020-04-01-09" のように，後ろに日時をつけた形で作成されます．これにより，ストリームで流れてくるデータを一定の日時ごとに区切って取り扱うことができるようになります（この形をとる意味については，Lab 3 で詳しく説明します）
-8. その下の **"S3 backup"** で，**"Back up S3 bucket"** の右側 **[Create new]** ボタンを押して，S3 バケットの作成画面に進みます．**"S3 bucket name"** に，**"workshop-firehose-backup-YYYYMMDD-YOURNAME"** と入力します（YYYYMMDD は 20200701 のように，今日の日付と置き換えてください．また YOURNAME は taroyamada のようにご自身の名前と置き換えてください．この場合バケット名は "workshop-firehose-backup-20200701-taroyamada" となります）．このバケットは， Firehose から Amazon ES に挿入する際にエラーになったレコードを，バックアップとして格納するためのものです
-9. **"Step 4: Configure settings"** で，一番下の "Permission" において **[Cteate new or choose]** ボタンを押します．**"IAM ロール"** で **[新しい IAM ロールの作成]** を選択して，**"ロール名"** に **"workshop_firehose_delivery_role"** と入力して **[許可]** ボタンを押します．下の画面に戻ったら **[Next]** を押します
-10. **"Step 5: Review"** で，これまでの設定内容を眺めて，特に問題がなければ画面右下の **[Create delivery stream]** を押してドメインを作成してください．ストリームの作成には数分程度かかります
+1. In a similar manner with the Section 1, confirm that **[N. Virginia]** is chosen by the region selector in the right of the header in the console screen. If **[N. Virginia]** is not selected, click the region name and change to **[N. Virginia]**.Then, go to the **[Kinesis]** page from [Service] in the top left of the AWS Management Console screen.
+2. Choose **[Kinesis Data Firehose]** in Get started in the right top of the screen. Then, click **[Create delivery stream]** to go to the Firehose stream creation page.
+3. In **"Step 1: Name and source"**, enter **"workshop-firehose"** in **"Delivery stream name"**. Then, click **[Next]** without changing any other settings
+4. In **"Step 2: Process records"**, does not change anything, and click **[Next]**.
+5. In **"Step 3: Choose a destination"**, choose **[Amazon Elasticsearch Service]** in **"Destionation"**. Then, in **"Domain"** at **"Amazon Elasticsearch Service destination"**, choose **["workshop-esdomain"]** you have created in Section 1. You can now automatically send logs into Amazon ES above.If Domain is in Processing status, wait until it is selectable.
+6. Enter **"workshop-log"** in **"Index"**. Amazon ES Index is equivalent to a table in DB in a simple analogy, but the log sent from this Firehose stream will be inserted into the index called workshop-log. If there is no Index on the Amazon ES in inserting, an Index is automatically created.
+7. Choose **[Every hour]** from the pull-down menu in **“Index rotation”**. With this setting, a new index is created every hour. The index name is also created with the date and time, such as "workshop-log-2020-04-01-09". This makes it possible to separate the data flowing in the stream by a certain date and time (the meaning of using this setting will be explained in more detail in Lab 3).
+8. In **"S3 backup"** below, click **[Create new]** button on the right of **"Back up S3 bucket"** to go to Create S3 bucket. In **"S3 bucket name"**, enter **"workshop-firehose-backup-YYYMMDD-YOURNAME"** (Replace YYYMMDD with today's date, for example, 20200701. And then, replace YOURNAME with your name like taroyamada. In this case, the bucket name will be “workshop-firehose-backup-20200701-taroyamada”). This bucket is used to store a backup of records that fail when inserting them from Firehose into Amazon ES.
+9. In **"Step 4: Configure settings"**, click **[Cteate new or choose]** button in “Permission” at the bottom. In **"IAM roles"**, choose **[Create a new IAM role]**, enter **"workshop_firehose_delivery_role"** in **"Role name"**, and  click **[Allow]** button. Then, click **[Next]** when you return to the bottom screen.
+10. In **"Step 5: Review"**, review the settings you have entered in the above, and if there is no concern to them, click **[Create delivery stream]** to create a domain. It takes a few minutes to create the stream.
 
-### 解説
+### Explanation
 
-IAM とは，Identity and Access Management の略で，AWS サービス・リソースへのアクセス権限管理を行うためのサービスです．以下のようなフォーマットで書かれるものです．この場合 EC2 のインスタンスを作成すること，また S3 の my-bucket というバケットに対して，中にあるオブジェクトをリストしたり，読み書きしたりすることができます．このような権限セットをポリシーと呼びます．上の Firehose 手順でいうと，Firehose のストリームが S3 バケットにエラーデータを書き込んだり，Amazon ES にデータを挿入できるようにする必要があります．
+IAM stands for Identity and Access Management and is a service for managing access rights to AWS service resources. It is written in the following format. In this case, you can create a EC2 instance, and also list and read or write objects that exist in the S3 bucket called my-bucket. This set of permissions is called a policy. As mentioned in the Firehose steps above, you need to allow Firehose streams to write error data to an S3 bucket and insert data into Amazon ES.
 
 ```json
 {
@@ -87,75 +87,75 @@ IAM とは，Identity and Access Management の略で，AWS サービス・リ�
 }
 ```
 
-このポリシーを複数アタッチした IAM ロールというものを作成し，Firehose がこの IAM ロールを使って各サービスにアクセスできるようにする，といった流れになります．これらを図にまとめたものが以下のようになります
+This creates an IAM role with multiple attached policies, and enabling Firehose to access each service using this IAM role. These are summarized in the diagram below.
 
 ![iam_role](../images/iam_role.png)
 
-## Section 3: Amazon ES の権限設定
+## Section 3: Setting Amazon ES Permissions
 
-ここまで Amazon ES ドメインと，そこにログを挿入するための Firehose ストリームの作成を行いました．しかし，まだ適切な権限設定を行なっていないため，Firehose から Amazon ES にログを送ることはできません．ここでは Amazon ES 上のウェブインターフェースである Kibana を使って，Firehose にログを挿入するための権限を付与していきます．
+You have created the Amazon ES domain and the Firehose stream to insert logs into it. However, Firehose cannot send logs to Amazon ES because you have not set the appropriate permissions yet. In this section, you will use Kibana which is a web interface on Amazon ES to give Firehose permission to insert logs.
 
 ![architecture_kibana](../images/architecture_kibana.png)
 
-### Amazon ES の権限モデル
+### Amazon ES Permission Model
 
-Amazon ES では，オープンソースの Elasticsearch ディストリビューションである，Open Distro for Elasticsearch をベースとしています．Open Distro には独自の権限管理モデルがあり，Amazon ES でもこれを使用することができます．Open Distro の権限モデルは以下の通りで，Role と Role Mappings から構成されます．
+Amazon ES is based on Open Distro for Elasticsearch, which is an open-source Elasticsearch distribution. Open Distro has original permission management model that you can use it with Amazon ES. The permissions model of Open Distro is as follows and consists of Role and Role Mappings.
 
-**Role**: Elasticsearch のさまざまな権限を束ねた単位です．例えばクラスター自体を操作したり，データを追加・削除する権限が付与された  development role や，クラスター上の特定ログデータだけを読み取りできる reader role を設定することができます．Elasticsearch にはあらかじめいくつかのロールが定義されています
+**Role**: A unit of various privileges of Elasticsearch. For example, you can set a development role that is granted permission to manipulate the cluster itself, add or delete data, and a reader role that can read only specific log data on the cluster. Elasticsearch has several pre-defined roles.
 
-**Role Mappings**: 上で定義した Elasticsearch の Role と，AWS の IAM ユーザーや IAM ロールの紐付けのことを指します．これにより，特定の IAM ロールに対して，必要な Elasticsearch の操作を許可できるようになります
+**Role Mappings**: A mapping that indicates the association of Elasticsearch Role defined above with AWS IAM users, and IAM roles. This allows specific IAM roles to perform the required Elasticsearch manipulation.
 
-ここでは，Amazon ES にログを追加する権限を持った書き込み用ロールを新しく定義し，このロールを AWS 側の Firehose の IAM ロールに紐付けます．これらをまとめたものが以下の図になります．同じロールという言葉が AWS IAM と Open Distro とで使われており混乱しやすいですが，両者は全く別のものです．AWS IAM のロールは，AWS 上の権限管理を行うためのもので，Open Distro のロールは Elasticsearch クラスター上の権限管理用です．これらを結びつけるのが Open Distro の Role Mappings の役割となります．
+In this section, you will define a new write role with permission to add logs to Amazon ES, and associate this role with the IAM role for Firehose on AWS.These are summarized in the diagram below. The role which is the same word is used in AWS IAM and Open Distro, so that it makes you confuse easily. But they are completely different. AWS IAM roles are for managing permissions on AWS, and Open Distro roles are for managing permissions on Elasticsearch clusters.This is the role of Role Mappings in Open Distro to connect them together.
 
 ![role_mappings](../images/role_mappings.png)
 
-### Amazon ES ロールの作成
+### Creating an Amazon ES Role
 
-1. AWS マネジメントコンソールの画面左上にある [サービス] から **[Amazon ES]** のページを開いてください
-2. Amazon ES のダッシュボード画面上で，先ほど作成したドメイン **[workshop-esdomain]** をクリックします．ドメインの詳細が表示されたら，**"Kibana"** の横にある URL をクリックしてください．Kibana のログイン画面が表示されますので，Section 1 で指定したマスターユーザーとマスターパスワードを入力してください
-3. ログイン後の画面では，**[Explore on my own]** を選択します．続いて画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開きます
-4. **"Permissions and Roles"** の下にある **[Roles]** をクリックして，ロール管理画面に進みます．Amazon ES にログを挿入する用のロールを作成するために，画面右側の + ボタンをクリックします
+1. Go to **[Amazon ES]** from [Service] in the top left of the AWS Management Console.
+2. Click **[workshop-esdomain]** you have created in the above　on the Amazon ES dashboard.　When the domain details are displayed, click the URL next to **"Kibana"**.　The login screen for Kibana is displayed, so that enter the master user and the master password specified in the Section 1.
+3. Choose **[Explore on my own]** on the screen after logging in. Then, click ![kibana_security](../images/kibana_security.png) mark on the left of the screen to open the security settings menu.
+4. Click **[Roles]** under **"Permissions and Roles"** to go to the role management screen. Then, click + button on the right side of the screen to create a role for inserting logs into Amazon ES.
    ![role_setting](../images/role_setting.png)
-5. **"Role name"** に **"workshop_firehose_delivery_role"** と入力します．続いて上側の **[Cluster Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add Action Group]** ボタンを押します．プルダウンメニューから **[cluster_composite_ops]** を選択します．続いてもう一度 **[+ Add Action Group]** ボタンを押し，**[cluster_monitor]** を追加します．これらの権限は，クラスターの情報を読み取るためのもので，Open Distro 側であらかじめ定義されているものになります．詳細を知りたい方は[こちら](https://opendistro.github.io/for-elasticsearch-docs/docs/security-access-control/default-action-groups/#cluster-level)をご確認ください．これによって，下図のような状態になります
+5. Enter **"workshop_firehose_delivery_role"** in **"Role name"**. Then, choose the upper **[Cluster Permissions]** tab to open the menu of cluster permission setting, and click **[+ Add Action Group]** button. Next, choose **[cluster_composite_ops]** from the pull-down menu. Then, click **[+ Add Action Group]** button again, and add **[cluster_monitor]**. These permissions are used to read cluster information, and are predefined in Open Distro. For more information, please click [here](https://opendistro.github.io/for-elasticsearch-docs/docs/security-access-control/default-action-groups/#cluster-level). The diagram below shows you the configuration you have set the steps above.
    ![cluster_permissions](../images/cluster_permissions.png)
-6. 次に上側の **[Index Permissions]** タブを選択し，**[Add index permissions]** ボタンを押します．**"Index patterns"** に，先ほど Firehose 側で指定した index 名を含む **"workshop-log-*"** を入力してください．これは実際の index 名は "workshop-log-2020-04-01-09" のように，後ろに日付がつく形で作成されるため，これらを全て含む必要があるためです．続いてその下の **"Permissions: Action Groups"** で，この index に対して許可するアクションを設定します．**[+ Add Ation Group]** を押して，プルダウンメニューから **[create_index]** を選択します．同様に **[+ Add Ation Group]** から **[manage]** と **[crud]** を追加します．最終的な状態は以下のようになります
+6. Choose the upper **[Index Permissions]** tab, and click **[Add index permissions]** button. Then, enter **"workshop-log-*"** including the index name designated in Firehose earlier in **"Index patterns"**. The real index name will be created with a date in the end of the name like "workshop-log-2020-04-01-09", therefore all those should be included. Next, set the action to grant the permission to this index under **"Permissions:Action Groups"**. Then, click **[+ Add Ation Group]**, and choose **[create_index]** from the pull-down menu. In a similar manner, add **[manage]** and **[crud]** from **[+ Add Ation Group]**. The final state will be as follows.
    ![index_permissions](../images/index_permissions.png)
-7. 画面下側の，**[Save Role Definition]** ボタンを押して，ロールを作成してください
+7. Click **[Save Role Definition]** button at the bottom of the screen to create the role.
 
-### Open Distro ロールと IAM ロールの紐付け
+### Mapping Open Distro Roles with IAM Roles
 
-1. AWS マネジメントコンソールの画面左上にある [サービス] から **[Kinesis]** のページを開いてください．画面右上の **"Kinesis Firehose 配信ストリーム"** から，先ほど作成した **[workshop-firehose]** を選択します．ストリームの詳細画面で，**"IAM role"** に表示されている **[workshop_firehose_delivery_role]** のリンクをクリックしてください
-2. IAM の管理画面で，**"ロール ARN"** の右にある **"arn:aws:iam::123456789012:role/workshop_firehose_delivery_role"** のような文字列をコピーします（この値は，各人で異なったものであるため，必ず画面上でコピーしてくだい）．これが Firehose の AWS リソースへのアクセス権限を管理する，IAM ロールと呼ばれるものです
-3. 続いて Kibana の管理画面に戻ります．画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開いてください．**"Permissions and Roles"** の下にある **[Role Mappings]** をクリックして，ロール紐付け画面に進みます
-4.  画面右側の + ボタンをクリックして，新しい紐付けの作成画面を開きます．画面上部の **"Role:"** 下のプルダウンメニューから，先ほど作成した **[opendistro_firehose_role]** を選択します．続いて **"Backend roles"** にある **[+ Add Backend Role]** ボタンを押して， 先ほどコピーしたロール ARN の文字列を貼り付けてください
-5. 最後に **[Submit]** を押して，紐付けを完了します
+1. Go to **[Kinesis]** page from [Services] on the top left of the AWS Management Console.　From **"Kinesis Firehose Stream"** in the top right of the screen, choose **[workshop-firehose]** you have created in this Lab.　On the stream details screen, click the link **[workshop_firehose_delivery_role]** displayed in **"IAM role"**.
+2. In the IAM management console, click **"arn:aws:iam::123456789012:role/workshop_firehose_delivery_role"** to the right of **"Role ARN"**. (tthis value is different individually, so that make sure it on the screen and then copy it) This is the IAM role that manages permissions to AWS resources for Firehose.
+3. Go back to the management screen for Kibana. Next, click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the security settings menu. Then, click **[Role Mappings]** under **"Permissions and Roles"** to go to the Role Mapping screen.
+4. Click + button on the right of the screen to open the new mapping screen.From the pull-down menu under **"Role:"** at the top of the screen, choose **[opendistro_firehose_role]** you have created in the above. Then, click **[+ Add Backend Role]** button in **"Backend roles"**, and paste the string of Role ARN you have copied in the above.
+5. At last, click **[Submit]** to complete the mapping.
 
-## Section 4: Kinesis Data Generator のセットアップ
+## Section 4: Setting Up Kinesis Data Generator
 
-そして Kinesis Data Generator のセットアップを行います．Kinesis Data Generator は，Kinesis に流し込むログを生成するためのウェブアプリケーションで，AWS により開発・公開されています．このツールについて詳しく知りたい方は，[こちらの解説記事](https://aws.amazon.com/jp/blogs/news/test-your-streaming-data-solution-with-the-new-amazon-kinesis-data-generator/)を参照ください．
+In this section, set up the Kinesis Data Generator. Kinesis Data Generator is a web application developed and provided as a service by AWS to generate logs flowing into Kinesis. To learn more about this service, please read [this article](https://aws.amazon.com/jp/blogs/news/test-your-streaming-data-solution-with-the-new-amazon-kinesis-data-generator/).
 
 ![architecture_generator](../images/architecture_generator.png)
 
-### CloudFormation による必要なリソースの作成
+### Creating Required Resources with CloudFormation
 
-1. [こちら](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=Kinesis-Data-Generator-Cognito-User&templateURL=https://aws-kdg-tools.s3.us-west-2.amazonaws.com/cognito-setup.json)をクリックして，CloudFormation のスタック作成画面を立ち上げます．Kinesis Data Generator では，ログイン認証およびログ送信権限の認可に，Amazon Cognito というサービスを裏で利用します．この CloudFormation スタックを作成することで，必要な Cognito のリソースを作成してくれます．
-2. **"ステップ 1: テンプレートの指定"** で，すでにテンプレートソースが置かれている Amazon S3 URL が入力済みであることを確認してください．このCloudFormation のスタック作成はオレゴンリージョンでしか実施できません．そのため画面右上のリージョン選択画面が **[オレゴン]** になっていますが，これを変更せずそのまま **[次へ]** を押します
-3. **"ステップ 2: スタックの詳細を指定"** で，**"Cognito User for Kinesis Data Generator"** の **"Username"** と **"Password"** に，それぞれ適当な値を入力してください．ここで指定したユーザー名とパスワードは，すぐ後で Kinesis Data Gnerator にログインする際に使用します．入力したら **[次へ]** をクリックします
-4. **"ステップ 3: スタックオプションの設定"** では，何も変更せずに **[次へ]** を押します
-5. **"ステップ 4: レビュー"** で，画面一番下の **"AWS CloudFormation によって IAM リソースが作成される場合があることを承認します。"** のチェックボックスを選択してから，**[スタックの作成]** ボタンを押してスタックの作成を開始してください
-6. スタックのステータスが CREATE_COMPLETE になるまで，数分程度待ちます
+1. Click [here](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=Kinesis-Data-Generator-Cognito-User&templateURL=https://aws-kdg-tools.s3.us-west-2.amazonaws.com/cognito-setup.json) to start with the CloudFormation stack creation screen. Kinesis Data Generator uses a service called Amazon Cognito at the backend for login authentication and authorization of log sending permissions. By creating this CloudFormation stack, you can create the necessary Cognito resources.
+2. In **"Step 1: Specify template"**, make sure that the Amazon S3 URL where the template source is located has already entered. This CloudFormation stack creation is only available in the Oregon region. Therefore, the region selection in the top right of the screen is set to **[Oregon]**, so click **[Next]** without any changes.
+3. In **"Step 2: Specify stack details"**, enter the appropriate value for **"Username"** and **"Password"** for **"Kinesis Data Generator"**. The username and password specified here will be used to log in to Kinesis Data Gnerator later. Once you have entered, click **[Next]**.
+4. In **"Step 3: Configure stack options"**, click **[Next]** without any changes.
+5. In **"Step 4: Review"**, check the check-box of **"I acknowledge that AWS CloudFormation might create IAM resources with custom names "** at to bottom of the screen, and then click **[Create stack]** button to start the stack creation.
+6. Wait for a few minutes until the stack status changes  CREATE_COMPLETE.
 
-### Kinesis Data Generator によるログ送信
+### Sending Logs from Kinesis Data Generator
 
-1. 作成した CloudFormation スタックの **[出力]** タブを選択します．表示される **"KinesisDataGeneratorUrl"** の URL をクリックすることで，Kinesis Data Generator の設定画面を開くことができます
+1. Choose **[Output]** tab of the CloudFormation stack you have created. You can open the setting screen of Kinesis Data Generator by clicking the URL of **"KinesisDataGeneratorUrl"** displayed.
 
-2. 前の手順で入力したユーザー名とパスワードを，画面右上の **"Username"** と **"Password"** に入れてログインしてください
+2. Enter the user name and password you have created in the the above step to **"Username"** and **"Password"** in the top right of the screen, and then login to it.
 
-3. ここから，実際に送信するログの設定を行なっていきます．**"Region"** で **[ap-northeast-1]**（東京リージョンのこと）を選択，また **Stream/delivery stream** で先ほど作成した **[workshop-firehose]** を選んでください
+3. Configure the log transfer setting actually in this step. In **"Region"**, choose **[ap-northeast-1]** ( N. Virginia region), and then choose **[workshop-firehose]** you have created earlier in **Stream/delivery stream**.
 
-4. 続いて **Records per second**（1 秒間に生成されるログのレコード数）に **"5"** と入力します．つまり毎秒 5 レコード，1 分間で 300 件が生成されて，Firehose に送られることになります
+4. Enter **"5"** to **Records per second** (the number of log records generated per second). This means that 5 records are created per 1 second. As a result 300 records are generated in one minute, and then sent to Firehose.
 
-5. その下の **"Record template"** で，**"Templete 1"** の下に書かれているサンプルフォーマットを消して，以下の内容をコピーして貼り付けてください．ここでは，IoT センサーから送信されるログを想定したフォーマットを指定します．乱数等を用いて，ダミーのログデータを自動生成してくれます
+5. In **"Record template"** below, delete the sample format written under **"Templete 1"**, and copy and paste the following codes. This specifies the format for logging sent from IoT sensors. It automatically generates dummy log data using such as random numbers.
 
    ```json
    {
@@ -175,43 +175,43 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
    }
    ```
 
-6. 画面下側の [Test template] を押すと，実際に送信されるログのサンプルを確認することができます．以下のようなレコードが 5 つ生成されるのが確認できるかと思います
+6. When clicking [Test template] at the bottom of the screen, you can check the sample of the log being actually sent. You can see that five records are generated as follows:
 
    ```json
    {    "sensorId": 42,    "currentTemperature": 38,    "ipaddress": "29.233.125.31",    "status": "OK",    "timestamp": "2020/03/03 12:49:12"}
    ```
 
-7. 問題なければ，最後に **[Send data]** ボタンを押して，ログの送信を始めてください．ポップアップで表示される [Stop Sending Data to Kinesis を押すか，ブラウザタブを閉じるまで，Firehose に対してデータが送信され続けます
+7. If there is no matter, click **[Send data]** button at last to start sending the log. The Data continues to be sent to Firehose until you click [Stop Sending Data to Kinesis] displayed in the pop-up menu or close the browser tab.
 
-## Section 5: Amazon SNS のトピック作成
+## Section 5: Creating a Topic for Amazon SNS
 
-最後に，Amazon SNS のトピックと，通知する先のメール配信設定を作成します．
+In this section, you will create a topic for Amazon SNS and email delivery settings for notifications.
 
 ![architecture_sns](../images/architecture_sns.png)
 
-### Amazon SNS のトピック作成
+### Creating a topic for Amazon SNS
 
-SNS のトピックは，通知を管理する単位です．Lab 3 で Amazon ES からこのトピックに対してアラートの通知を送ります．
+A topic in SNS is a unit for managing notifications. In Lab 3, Amazon ES will send alert notifications to this topic.
 
-1. AWS マネジメントコンソールの画面左上にある **[サービス]** から **[SNS]** のページを開いてください．画面左側のメニューアイコンを押して，トピックをクリックします．右側の **[トピックの作成]** ボタンを押して，トピック作成画面に進みます
-2. **"名前"** に **"amazon_es_alert"**，**"表示名"** も **"amazon_es_alert"** と入れて **[トピックの作成]** ボタンを押します
-3. トピック一覧に，今作成したトピックが表示されているのをみつけたら，右側の ARN（`arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` のような文字列です）をコピーしておいてください．後ほどの IAM ロールの作成，および Lab 3 で使用します
+1. Go to **[SNS]** page from **[Services]** in the top left of the AWS Management Console. Next, click the menu icon on the left of the screen to click Topics. Then, click **[Create topic]** button on the right to go to the topic creation screen.
+2. Enter **"amazon_es_alert"** in **"Name"**, **"amazon_es_alert"** in **"Display name"**, and click **[Create topic]** button.
+3. When you find the topic you have created in the topic list, copy the ARN that is in the right (the string is like  `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` ). You will create IAM roles later and use them in Lab 3.
 
-### サブスクリプションの作成
+### Creating a Subscription
 
-次にサブスクリプションを作成します．これはトピックを購読して，通知を受け取る先の設定を指します．ここでは，上で作成したトピックを購読する email を登録します．
+Now, you will create a subscription here. This specifies the settings where you want to subscribe the topics and receive notifications. You will register email to subscribe the topic created above.
 
-1. 左側メニューの **[サブスクリプション]** を押して，右側の **[サブスクリプションの作成]** ボタンを押します．トピック ARN から，先ほど作成したトピックを選択してください．プロトコルとして **[E メール]** を選択し，エンドポイントに，通知を受け取れるご自身のメールアドレスを入力してください
-2. 上記の設定が済んだら **[サブスクリプションの作成]** を押して作成を完了してください 
-3. 数分内に，入力したメールアドレス宛に Amazon SNS から "AWS Notification - Subscription Confirmation" というタイトルのメールが来ますので，メール本文にある **[Confirm subscription]** リンクをクリックして，設定を完了します
+1. Click **[Subscriptions]** in the left menu to click **[Create subscription]** button on the right. Next, Choose the topic you have created in the above from the Topic ARN. Then, choose **[Email]** as a protocol, and enter your email address to receive notifications at the endpoint.
+2. Once you have completed the above settings, click **[Create subscription]** to complete the creation.
+3. Within a few minutes, you will receive the email titled "AWS Notification - Subscription Confirmation" from Amazon SNS to the email address you have entered in the above, so that click **[Confirm subscription]** link in the email body to complete the setting.
 
-### IAM ロールの作成
+### Creating an IAM Role
 
-最後に，Amazon ES から SNS トピックに通知を送るための，IAM ロールを作成します．
+At last, you will create an IAM role to send notifications from Amazon ES to SNS topics.
 
-1. マネジメントコンソールで、IAM のコンソールを開き、**[ロール]**，**[ロールの作成]** の順に選択します．作成ページで， **[AWS サービス]** を押し，続いてその下の **"一般的なユースケース"** にある **[EC2]** をクリックしたら，**[次のステップ: アクセス権限]** ボタンを押します
+1. Go to the IAM console in the Management Console, and choose the menu in the order of **[Roles]** > **[Create role]**. On the creation page, click **[AWS service]**, click **[EC2]** under **"Common use cases"**, and then click **[Next: Permissions]** button.
 
-2. **[ポリシーの作成]** ボタンをクリックすると新しいブラウザタブが開きます．そこで **[JSON]** タブを選択して，以下の内容で上書きしてください．なお，下のコードのうち "SNS_TOPIC_ARN" となっている部分を，先ほどコピーした SNS トピックの ARN と置き換えてください．終わったら画面下部の **[ポリシーの確認]** ボタンを押します
+2. Click **[Create policy]** button to open a new browser tab. Next, choose **[JSON]** tab there, and overwrite it with the following codes. In addition, replace "SNS_TOPIC_ARN" in the codes below with the ARN of SNS topic you have copied earlier. When completed, click **[Check policy]** button at the bottom of the screen.
 
    ```json
    {
@@ -224,15 +224,15 @@ SNS のトピックは，通知を管理する単位です．Lab 3 で Amazon ES
    }
    ```
 
-3. **"名前"** に **"amazones_sns_alert_policy"** と入力したら，**[ポリシーの作成]** を押します．作成が終わったら，このブラウザタブを閉じて，もとのロール作成画面に戻ってください
+3. Enter **"amazones_sns_alert_policy"** in **"Name"**, and click **[Create policy]**. When completed, close this browser tab, and go back to the role creation screen.
 
-4. ロール作成画面で，右上のリロードボタンを押してから，フィルタ内に **"amazones_sns_alert_policy"** と入力し，ポリシーを絞り込みます．先ほど作成したポリシーにチェックをつけたら，**[次のステップ: タグ]** を押します
+4. On the role creation screen, click the reload button at the top right, and then enter **"amazones_sns_alert_policy"** in the filter to narrow the policy.After checking the policy you have created, click **[Next: Tag]**.
 
-5. タグの設定画面では何もせずに，**[次のステップ: 確認]** ボタンを押します
+5. Do not make any changes on the tag settings screen, click **[Next: Review]** button.
 
-6. "ロール名" に **"amazones_sns_alert_role"** と入力したら，**[ロールの作成]** ボタンを押して，ロールをの作成が完了です
+6. After entering **"amazones_sns_alert_role"** in "Role name", click **[Create role]** button to complete the role creation.
 
-7. 元のロール一覧画面に戻ったら，検索窓に **"amazones_sns_alert_role"** と入力して，作成したロールを選択してください．ロールの詳細画面が表示されたら，**[信頼関係]** タブをクリックして，**[信頼関係の編集]** ボタンを押します．編集画面に入ったら，既存の中身を次の内容に置き換えてください．これは Amazon ES のドメイン（es.amazon.com）から，このロールを利用可能にするための設定です
+7. Go back to the Roles page, and then enter **"amazones_sns_alert_role"** in the search box to choose the role you have created. When the details screen for the role is displayed, click **[Trust relationships]** tab at the bottom to click **[Edit trust relationship]** button. After entering the edit screen, replace the existing codes with the following codes. This is the setting to make this role available from the Amazon ES domain (es.amazon.com).
 
    ```json
    {
@@ -249,11 +249,11 @@ SNS のトピックは，通知を管理する単位です．Lab 3 で Amazon ES
    }
    ```
 
-8. 画面下部の **[ 信頼ポリシーの更新]** ボタンを押して元の画面に戻ります
-9. 戻ったら，IAM ロールの詳細画面に書かれている "ロール ARN" の値（`arn:aws:iam::123456789012:role/amazones_sns_alert_role`のような文字列です）をコピーしておきます．この文字列は Lab 3  で使用します
+8. Click **[Update Trust Policy]** button at the bottom of the screen to go back to the previous screen.
+9. When you go back, copy the value of "Role ARN" (the string is such as `arn:aws:iam: :123456789012:role/amazones_sns_alert_role`) in the IAM Role details screen. This string will be used in Lab 3.
 
-以上で，Amazon SNS の設定が終わりました
+Now, you have completed to set up Amazon SNS.
 
-## まとめ
+## Summary
 
-Lab 1 では，以降の Lab で必要な環境のセットアップを行いました．これにより，Kinesis Data Generator で生成したデータを Firehose で集約し，Amazon ES に挿入，さらに Kibana から Amazon ES のデータを確認できるようになりました．続いて [Lab 2](../lab2/README.md) に進んでください．
+In Lab 1, you have set up the required environment for the later Lab. This allows Firehose to aggregate data generated by Kinesis Data Generator, insert it into Amazon ES, and check Amazon ES data from Kibana. Please proceed to [Lab 2](../lab2/README.md).

@@ -1,18 +1,18 @@
-# Lab 4: Amazon ES の応用的な使い方
+# Lab 4: Amazon ES Advanced Usage
 
-ハンズオンの冒頭で述べたように，Amazon ES のユースケースは大きくわけて，ログ分析と全文検索の 2 つがあります．すでにログ分析については Lab 2 で触れました．この Lab 4 では，全文検索を中心に，いくつかの応用的な使い方についてみていきたいと思います．
+As mentioned at the beginning of this hands-on, there are two major use cases for Amazon ES: log analysis and full-text search. For the log analysis had already mentioned in Lab 2. In this Lab 4, let’s take a look for some of the more advanced usage, focusing on full-text search.
 
-## Section 1: Amazon ES を用いた全文検索
+## Section 1: Full-Text Search Using Amazon ES
 
-ここまで主にログ分析を中心に，Amazon ES の機能について触れてきました．しかし Elasticsearch という名前の通り，もともと Elasticsearch は全文検索を行うためのプロダクトとして開発されてきました．そこでこのセクションでは，Amazon ES を用いて全文検索を試してみたいと思います．
+So far, you have been trying on Amazon ES features, mainly log analysis. However, as the name Elasticsearch indicates, Elasticsearch is originally developed as a product for full-text search. In this section, let’s try full-text search using Amazon ES.
 
-### 全文検索用の index 作成
+### Create an index for full-text search
 
-まずは，全文検索を行うための index を新たに作成しましょう．
+First, you will create a new index to perform full-text search.
 
-1. 画面左側の![kibana_devtools](../images/kibana_devtools.png)マークをクリックして，Dev tools のメニューを開きます
+1. Click ![kibana_devtools](../images/kibana_devtools.png) icon on the left of the screen to open the Dev tools menu.
 
-2. 下の **"Console"** に以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．ここでは，シンプルに "content" という 1 フィールドのみが存在する，mydocs という index を作成しました．Lab 2 では，データ挿入時に Amazon ES 側でフィールドのマッピングを自動認識する形で index を作成しましたが，ここでは明示的にテキストの解析を行うために，前もってマッピングを指定して index を作成しています
+2. Copy the following block of codes to the **"Console"** below, and click ▶ button on the right to execute the API. In this example, an index called mydocs which has only one field called "content" will be created. In Lab 2, the index that automatically recognizes field mappings on Amazon ES when inserting data has created, but here the index designated with mapping in advance to clearly analyze texts will be created.
 
    ```json
    PUT mydocs
@@ -28,29 +28,29 @@
    }
    ```
 
-3. 続いて以下のコマンドを実行して，作成した index に対してドキュメントを 2 件追加します
+3. Execute the following command to add two documents to the index you have created.
 
    ```json
    POST mydocs/_bulk
    {"index":{"_index":"mydocs","_type":"_doc"}}
    {"content":"Amazon Redshift is a high speed enterprise grade data warehouse service."}
    {"index":{"_index":"mydocs","_type":"_doc"}}
-   {"content":"Amazon Web Services offers various kind of analytics services."}
+   {"content":"Amazon Web Services offers various kinds of analytics services."}
    ```
 
-上の手順 2 で index を作成した際に，`"analyzer": "standard"` と設定しました．Elasticsearch では analyzer を指定することで，自動でテキストフィールドを解析して，後から検索しやすい形にします．Standard analyzer は Amazon ES のデフォルト analyzer で，検索に役立つさまざまな設定を行うことができます．詳しくは[こちら](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-standard-analyzer.html)をご覧ください．
+When creating the index in step 2 above, `"analyzer": "standard"` has been set. Elasticsearch automatically analyzes text fields by specifying analyzer to make them easier to search later. Standard analyzer is the default analyzer in Amazon ES and provides a variety of settings to help you search. For more information, see [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-standard-analyzer.html).
 
-### 全文検索クエリの実行
+### Executing a full-text search query
 
-それでは，上で作った index に対して実際に検索クエリを投げてみましょう．
+Now, you will actually execute a search query against the index created above.
 
-1. Dev tools の Console に対して，以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．`_search` API を叩くことで，検索クエリを実行することができます．クエリパラメタとして，"content" フィールドが "講座" にマッチするものを取得するようなクエリ条件を指定しています
+1. Copy the following codes to the Dev Tools Console, and click ▶︎ button on the right to execute the API. You can execute the search query by calling `_search` API. As a query parameter, the “content” field is specified query conditions that matches such as “course”.
 
    ```json
    GET mydocs/_search?q=content:"redshift"
    ```
 
-2. 想定通り，以下のような結果が得られたかと思います
+2. As expected, the following results may be obtained.
 
    ```json
    {
@@ -81,20 +81,20 @@
        ]
      }
    }
-   
+
    ```
 
-3. ここで "Redshift" ではなく，"redshift" で検索しても正しくドキュメントにヒットしたことに気づいたでしょうか．この背景を確認するために，以下のクエリを実行して，どのように文章が解析されたのかを確認してみましょう
+3. Did you notice that the document matched correctly when searching for “redshift” instead of “Redshift”? To confirm this background, execute the following query to see how the sentence is analyzed.
 
    ```json
    GET mydocs/_analyze
    {
-     "analyzer": "standard", 
+     "analyzer": "standard",
      "text": "Amazon Redshift is a high speed enterprise grade data warehouse service."
    }
    ```
 
-6. すると以下のように， 全ての単語が小文字に変換されていることに気づくでしょう．これは standard analyzer の中に [Lower Case Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lowercase-tokenfilter.html) と呼ばれるフィルターが含まれており，ここで全ての単語を小文字に変換しているのです．ここで使用した standard analyzer 以外にも，さまざまな built-in の analyzer がありますので，詳しく知りたい方は[こちら](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html)を参照してください．
+6. You will notice that all words are converted to lowercase as follows. This includes a filter called [Lower Case Token Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lowercase-tokenfilter.html) into the standard analyzer, which convert here all words to lowercase. In addition to the standard analyzer used here, there are a variety of built-in analyzer. For more information, see [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html) for more information.
 
    ```json
    {
@@ -180,17 +180,17 @@
    }
    ```
 
-### Synonym の設定
+### Synonym Settings
 
-続いて類義語（Synonym）の設定を行いたいと思います．ユーザーが検索を行う際に，実際に本文に含まれている単語にピッタリ一致するキーワードで検索してくれるとは限りません．似たような意味ではあるが，異なる表現のキーワードを使う場合があるでしょう．類義語を設定しておくことで，そのようなときでもきちんと検索結果を返せるようになります．
+Next, you will set up synonyms. When a user performs a search, it is not always possible to search for keywords that match the words in the text body. You might use keywords with similar meanings but different expressions. By setting synonyms, you will be able to receive search results properly in such cases.
 
-1. Dev tools の Console に対して，以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．先ほど作成した index を削除してしまいます
+1. Copy the following codes to the Dev Tools Console, and click ▶︎ button on the right to execute the API. The index you have created is deleted.
 
    ```json
    DELETE mydocs
    ```
 
-2. 続いて新しい index を作成します．今度は，末尾に "my_synonym" という新しい類義語の設定を加えています．ここでは "amazon web services"，"aws"，"cloud" の 3 つを，同じ単語と見なすようにしています．"redshift"，"rs"，"dwh" も同様です
+2. Then, create a new index. Add a new synonym setting to the end of "my_synonym". The three words "amazon web services", "aws", and "cloud" are considered the same here. The same applies to "redshift", "rs", and "dwh".
 
    ```json
    PUT mydocs
@@ -225,31 +225,31 @@
                  "redshift,rs,dwh"
                ]
              }
-             
+
            }
          }
        }
      }
    }
    ```
-   
-3. 先ほどと同様にデータを追加します
+
+3. Add the data as before
 
    ```json
    POST mydocs/_bulk
    {"index":{"_index":"mydocs","_type":"_doc"}}
    {"content":"Amazon Redshift is a high speed enterprise grade data warehouse service."}
    {"index":{"_index":"mydocs","_type":"_doc"}}
-   {"content":"Amazon Web Services offers various kind of analytics services."}
+   {"content":"Amazon Web Services offers various kinds of analytics services."}
    ```
 
-4. 同様に検索クエリを実行してください．ただし今回は，文章には含まれていない単語で検索を行います
+4. Execute the search query in the same way. This time, however, you will search for words that are not included in the sentence.
 
    ```json
    GET mydocs/_search?q=content:"aws"
    ```
 
-5. 文章に単語が踏まれていないにも関わらず，問題なく検索結果が取得できていることを確認できるでしょう！
+5. Even though there are no words in the sentence, you will be able to make sure that the search results are obtained without any problems!
 
    ```json
    {
@@ -274,7 +274,7 @@
            "_id" : "maUaBnEBdQ_VtJWA-48R",
            "_score" : 0.8630463,
            "_source" : {
-             "content" : "Amazon Web Services offers various kind of analytics services."
+             "content" : "Amazon Web Services offers various kinds of analytics services."
            }
          }
        ]
@@ -282,17 +282,17 @@
    }
    ```
 
-6. 最後に，元のドキュメントがどのように解析されているかを確認するために，以下のコマンドを実行します
+6. At last, execute the following command to see how the original document is analyzed.
 
    ```json
    GET mydocs/_analyze
    {
-     "analyzer": "my_analyzer", 
-     "text": "Amazon Web Services offers various kind of analytics services."
+     "analyzer": "my_analyzer",
+     "text": "Amazon Web Services offers various kinds of analytics services."
    }
    ```
 
-7. 今度は先ほどと違い，"is"，"of" といった単語が含まれていないのがみて取れるでしょう．実はこれ，先ほど index を再作成する際に "stop" という "filter" を追加したためです．この [Stop Tken Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html) は，検索の役に立ちづらい助詞や前置詞を，解析する際にあらかじめ除外しておくというものです．これにより，"of" という単語で検索しても，ドキュメントがヒットしないようになります
+7. This time, unlike the previous one, you can see that the words "is" and "of" are not included. Actually, this is because "filter" called "stop" has added when recreating the index earlier. This [Stop Tken Filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html) allows you to exclude particles and prepositions that are difficult to search before analyzing them. This prevents the document from being match when searching for the word "of".
 
    ```json
    {
@@ -357,21 +357,21 @@
    }
    ```
 
-このセクションでは，全文検索における同義語やフィルタの利用についてみてきました．しかし本セクションで振られたのはごく一部で， Amazon ES ではより細かくさまざまな全文検索の設定を行うことができます．[Elasticsearch のドキュメント](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-tokenizer.html) に詳細が書かれていますので，ぜひご一読ください．
+In this section, you have tried the usage of synonyms and filters in full-text search. However, only a few part of full-text search features has been tried in this section. Other than the setting you have made in this section, Amazon ES allows you to configure a variety of full-text search settings. Please read the[Elasticsearch documentation](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-kuromoji-tokenizer.html) for more details.
 
-## Section 2: SQL を用いたログ分析
+## Section 2: Log Analysis Using SQL
 
-ここまで _search API を直接叩く形の検索クエリの書き方についてみてきました．しかし Elasticsearch のクエリは，JSON の入れ子で記述をする必要があり，書くのに手間がかかってしまいます．こうした問題をカバーするための方法がいくつかあります．例えば Python には，[Elasticsearch DSL](https://elasticsearch-dsl.readthedocs.io/en/latest/) という高レベルのクエリ記述ライブラリや，低レベルのクライアントである [Python Elasticsearch Client](https://elasticsearch-py.readthedocs.io/en/master/) があり，これらを用いることで比較的簡単にクエリを記述・実行することができます．
+So far, you have learned how to write a search query that directly executes _search API. However, Elasticsearch query needs to be described by nesting JSON, which is troublesome to write. There are several ways to solve this problem. For example, Python has a high-level query description library called[Elasticsearch DSL](https://elasticsearch-dsl.readthedocs.io/en/latest/) and a low-level client called [Python Elasticsearch Client](https://elasticsearch-py.readthedocs.io/en/master/), those allows you to write and execute queries relatively easily.
 
-このセクションでは，上記方法ではない第三の道として，SQL によるクエリ記述を試してみましょう．Open Distro の SQL 機能を用いることで，慣れ親しんだ SQL を用いて Elasticsearch のクエリを発行することができます．
+In this section, you will try to write a query using SQL as a tertiary method not mentioned before. Using the SQL function of Open Distro, you can issue Elasticsearch queries using familiar SQL.
 
-### \_opendistro/\_sql API によるクエリの実行
+### Executing queries with \_opendistro/\_sql API
 
-ここでも，先ほどと同様に Dev tools を用いて，API を実行していきましょう．
+Again, you will execute the API using Dev tools as before.
 
-1. 画面左側の![kibana_devtools](../images/kibana_devtools.png)マークをクリックして，Dev tools のメニューを開きます
+1. Click ![kibana_devtools](../images/kibana_devtools.png) icon on the left of the screen to open the Dev tools menu.
 
-2. 下の **"Console"** に以下の内容をコピーしてから，右側の ▶︎ ボタンを押して，API を実行してください．これは，**"workshop-log-*"** に適合するすべての index に対して，status ごとのレコード数と平均気温を集計するというものです．Lab 2 の Section 2 で解説したように，グルーピング処理を行う場合は keyword 型のフィールドを使用する必要がありますので，ここでは status.keyword を用いています
+2. Copy the following block of codes to the **"Console"** below, and click ▶ button on the right to execute the API. This means that for all indexes that fit **"workshop-log-*"**, the number of records per status and the average temperature is aggregated. As described in Section 2 of Lab 2, when performing the grouping processing, the field of keyword type is required. Here we use status.keyword.
 
    ```json
    POST _opendistro/_sql
@@ -388,7 +388,7 @@
    """
    }
    ```
-3. これを実行すると，以下のような結果が得られるでしょう（実際の集計結果は，実行環境ごとに異なった値となる点にご注意ください）．"aggregations" 以下に集計結果が表示されているのがみて取れるかと思います
+3. Executing the code above, you will get the result as follows (Note that the actual aggregate results will be different for each execution environment). You can see the aggregate results displayed in "aggregations".
 
    ```json
    {
@@ -430,8 +430,8 @@
      "status": 200
    }
    ```
-   
-4. 今度はクエリだけではなく，集計結果も SQL の実行結果のような形で表示してみましょう．以下のように `format=csv` というクエリパラメタをつけた形で同じクエリを実行します
+
+4. Now let's display not only the query but also the aggregate result in the form of the SQL execution result. Execute the same query with the query parameter called `format=csv` as follows.
 
    ```json
    POST _opendistro/_sql?format=csv
@@ -449,7 +449,7 @@
    }
    ```
 
-5. 実行結果として，以下のようなみやすい csv の値が表示されるのが確認できるかと思います．フォーマットとしては，`csv` 以外に `jdbc`, `raw` といったフォーマットもサポートされています．詳しくは [Open Distro のドキュメント](https://opendistro.github.io/for-elasticsearch-docs/docs/sql/protocol/)を参照してください
+5. As a result of execution, you can confirm that the following simple csv value is displayed. In addition to `csv`, other formats such as `jdbc` and `raw` are also supported. See the [Open Distro document](https://opendistro.github.io/for-elasticsearch-docs/docs/sql/protocol/) for more information.
 
    ```csv
    status.keyword,cnt,avgTemperature
@@ -458,11 +458,11 @@
    FAIL,2162.0,80.45189639222941
    ```
 
-### _sql API のクエリを Elasticsearch のクエリに変換する
+### Convert _sql API query to Elasticsearch query
 
-SQL でクエリをかけることがわかりましたが，ではこの内容を実際に Elasticsearch のクエリに直すとどのような形になるのでしょうか．Open Distro には SQL で書かれたクエリと等しい Elasticsearch クエリを返す `_opendistro/_sql/_explain` API を備えています．
+Now, you know that you can execute queries in SQL. Then let's see what would be when this query is actually revised into an Elasticsearch query. Open Distro has `_opendistro/_sql/_explain` API that returns an Elasticsearch query to be equal to a query written in SQL.
 
-1. 以下の SQL を実行してください
+1. Execute the following SQL.
 
    ```json
    POST _opendistro/_sql/_explain
@@ -480,7 +480,7 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
    }
    ```
 
-2. すると，次のような結果が返されます．この結果自体が，`_search` API に投げるクエリそのものです．
+2. The following result is returned. The result itself is the query to be sent to the `_search` API.
 
    ```json
    {
@@ -529,7 +529,7 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
    }
    ```
 
-3. そこで，上記の結果を貼り付けて，以下のように `_search` API を叩いてください
+3. Paste the above result, and execute `_search` API as shown below.
 
    ```json
    POST _search
@@ -579,7 +579,7 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
    }
    ```
 
-4. すると，`_opendistro/_sql` の結果と同じものが得られます．なお通常の `_search` API は，`csv` や `raw` のような結果表示には対応していません
+4. You can now receive the result as same as `_opendistro/_sql`. Note that the normal `_search` API does not support to display the results such as `csv` and `raw`.
 
    ```json
    {
@@ -640,8 +640,8 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
    }
    ```
 
-以上で `_sql` APIによるクエリの実行はおしまいです．注意点として，この API はすべての標準 SQL コマンドに対応しているわけではありません．例えば集計関数としては，現状`avg()`, `count()`, `max()`, `min()`, `sum()` にのみ対応しています．詳細については [Open Distro のドキュメント](https://opendistro.github.io/for-elasticsearch-docs/docs/sql/operations/)を確認してください．
+This has completed the query execution by `_sql` API. Note that this API does not support all standard SQL commands. For example, aggregate functions are currently supported only `avg ()`, `count ()`, `max ()`, `min ()`, and`sum ()`.Please see the [Open Distro document](https://opendistro.github.io/for-elasticsearch-docs/docs/sql/operations/) for more details.
 
-## まとめ
+## Summary
 
-この Lab では，全文検索とそのカスタマイズ，そして SQL API の使用という，Elasticsearch による検索の応用的な側面にフォーカスを当てました．以上で Elasticsearch の Workshop は全て完了です．[こちらの手順](../cleanup/README.md)に沿って，忘れずに後片付けを行なってください．リソースが残ったままだと，課金が発生し続けます．
+In this lab focused on the advanced aspects of Elasticsearch search: full-text search, customization, and SQL API usage. All of the Elasticsearch Workshop is now complete. Please do not forget clean up by following [these steps](../cleanup/README.md). If you keep the resource you used in this workshop, you will be continuously charged.

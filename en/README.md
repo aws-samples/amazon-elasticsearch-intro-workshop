@@ -1,39 +1,39 @@
-# はじめに
+# Introduction
 
-## 本ワークショップのゴール
+## Goals of this workshop
 
-Amaon Elasticsearch Service（Amazon ES）は，オープンソースの全文検索エンジン Elasticsearch を，安全かつスケーラブルな形で提供するマネージドサービスです．Amazon ES は主に以下の 2 つの用途で，多くのお客さまに使われています．
+Amaon Elasticsearch Service (Amazon ES) is a managed service that provides an open source full-text search engine Elasticsearch in a secure and scalable manner. Amazon ES is mainly used by many customers in two ways below:
 
-- ストリームデータに対するリアルタイムダッシュボードやログ分析
-- 主にテキストデータを対象とした全文検索
+- Real-time dashboards and log analysis for stream data
+- Full-text search mainly for text data
 
-本ワークショップでは，Amazon ES および関連する AWS サービス群を用いて，実際にリアルタイムダッシュボードの構築および全文検索を行うことを通じて，Amazon ES の使い方を理解し，今後の活用に役立てていただくための足がかりとすることをゴールとします．
+In this workshop, you will understand how to use Amazon ES by actually building a real-time dashboard and performing a full-text search using Amazon ES and related AWS services. The goals of this workshop is to provide you a basic knowledge of Amazon EX for future use.
 
-## 準備事項
+## Preparation
 
-- AWS を利用可能なネットワークに接続された PC（Windows, Mac OS, Linux 等）
-- 事前に用意していただいたAWSアカウント
-- ブラウザ（Firefox もしくは Chrome を推奨）
+- A PC with a network accessible to AWS services (Windows, Mac OS, Linux, etc.)
+- AWS account prepared in advance
+- Browser (Firefox or Chrome recommended)
 
-## ワークショップの概要
+## Workshop Overview
 
-本ワークショップを通じて，以下のような仕組みを構築していきます．
+In this workshop, you will build the following architecture.
 
 ![architecture](images/architecture.png)
 
-ワークショップは，以下の 4 つの Lab から構成されています．下記リンクを辿って，Lab 1 から順番に進めていってください．またワークショップを終える前に，かならず後片付けを行なってください．そうしない場合には，継続的な課金が発生してしまいます．
+This workshop consists of the following four Labs. You should follow the link below and proceed in order from Lab 1. Please remember to clean up before finishing the workshop. If you do not clean up, you will be charged continuously.
 
-- [Lab 1](lab1/README.md): 環境のセットアップ
-- [Lab 2](lab2/README.md): Kibana での可視化と分析
-- [Lab 3](lab3/README.md): Amazon ES の運用管理
-- [Lab 4](lab4/README.md): 日本語文書の全文検索
+- [Lab 1](lab1/README.md): Setting Up Your Environment
+- [Lab 2](lab2/README.md): Visualization and Analytics in Kibana
+- [Lab 3](lab3/README.md): Operational Management for Amazon ES
+- [Lab 4](lab4/README.md): Full-text search with English documents
 
-## ハンズオン全体を通しての注意事項
+## Precautions throughout the hands-on
 
-- 本ハンズオンは，基本的に「東京リージョン」を前提に記載されています．リソースなどの上限に引っかかってしまった場合は，「バージニア北部リージョン」で環境を作成することもできます．その場合，各ハンズオン資料の「東京リージョン（ap-northeast-1）」の記載をすべて，「バージニア北部（us-east-1）」に読み替えてください
-- 同じ AWS アカウントで，複数人が同時に本ハンズオンを実施する場合、リソースの名前などが重複しないように注意してください
-- 各手順において「任意」と記載のあるものについては，自由に名前を変更いただくことができますが，ハンズオン中に指定した名前がわからなくなったり，混乱したりしないように，基本的にはそのままの名前で進めることを推奨します
-- 手順内に「解説」と書かれている箇所については，ハンズオンで扱っている内容についての細かな説明となります．読み飛ばしていただいても，ハンズオンを進める上では特に問題はありません．ですがこの欄には，技術的な背景やハンズオンの中身についての説明が書かれていますので，読んでいただくことで理解を深められます
+- This hands-on is basically explained in the premise of “Northern Virginia Region”. If you reach the upper limit of resources in that region, you can also create your environment in other region, such as Oregon region. In such case, please replace all references to "Northern Virginia (us-east-1)" in each hands-on material with "Oregon (us-west-2)"
+- If more than one person try this hands-on at the same time with the same AWS account, please be careful not to duplicate resource names, etc.
+- You can freely customize the name of any item that is described as "optional" in each step. However, we recommend that you proceed with the name as it is, so that you don't get confused by the name you specified during hands-on.
+- The section where "Explanation" is written in the steps is a detailed explanation of the contents handled in the hands-on. Even if you skip it, you would not have any problem to go through the hands-on process. However, this section contains a description of the technical background and the contents of the hands-on, so you could gain deepler knowledge.
 
 
 
