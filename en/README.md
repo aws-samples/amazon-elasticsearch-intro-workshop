@@ -21,7 +21,7 @@ In this workshop, you will build the following architecture.
 
 ![architecture](images/architecture.png)
 
-This workshop consists of the following four Labs. You should follow the link below and proceed in order from Lab 1. Please remember to clean up before finishing the workshop. If you do not clean up, you will be charged continuously.
+This workshop consists of the following four Labs. You should follow the link below and proceed in order from Lab 1. Please remember to [clean up](en/cleanup/README.md) before finishing the workshop. If you do not clean up, you will be charged continuously.
 
 - [Lab 1](lab1/README.md): Setting Up Your Environment
 - [Lab 2](lab2/README.md): Visualization and Analytics in Kibana
