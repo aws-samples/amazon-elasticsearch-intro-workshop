@@ -19,7 +19,7 @@ This workshop also supports [Japanese version](jp/README.md) for Japanese users.
 
 In this workshop, you will build the following architecture.
 
-![architecture](/Users/makotosh/Documents/projects/amazon-elasticsearch-intro-workshop/en/images/architecture.png)
+![architecture](en/images/architecture.png)
 
 This workshop consists of the following four Labs. You should follow the link below and proceed in order from Lab 1. Please remember to [clean up](en/cleanup/README.md) before finishing the workshop. If you do not clean up, you will be charged continuously.
 
