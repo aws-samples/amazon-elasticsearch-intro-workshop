@@ -91,7 +91,7 @@ Elasticsearch では，index と呼ばれる単位でデータを管理し，そ
 
 今実施したグラフ作成の中で，status.keyword という表現が出てきました．この keyword というのが何か，もう少し詳しくみていきたいと思います．
 
-この keyword について理解するためには，Kibana の裏側で使われている，Elasticsearch のデータの取り扱い方について把握する必要があります．Elasticsearch の基本的なデータ型は，以下に示す通りです．これ以外の詳細なデータ型については，[Elasticsearch のドキュメント](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html)を参照してください．実は Elasticsearch には，文字列を表す型として text と keyword の 2 種類があります．text は通常の文字列を格納し，検索クエリに対する一致スコアの高い結果を返すような，通常の全文検索用途で使用します．これに対して keyword 型は，メールアドレスやウェブサイトの URL といった，文字列全体で初めて意味を持つタイプのテキストに使われます．
+この keyword について理解するためには，Kibana の裏側で使われている，Elasticsearch のデータの取り扱い方について把握する必要があります．Elasticsearch の基本的なデータ型は，以下に示す通りです．これ以外の詳細なデータ型については，[Elasticsearch のドキュメント](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html)を参照してください．実は Elasticsearch には，文字列を表す型として text と keyword の 2 種類があります．text 型は通常の文字列を格納し，検索クエリに対する一致スコアの高い結果を返すような，通常の全文検索用途で使用します．これに対して keyword 型は，メールアドレスやウェブサイトの URL といった，文字列全体で初めて意味を持つタイプのテキストに使われます．
 
 | **データ型**     | **説明**                                                     |
 | ---------------- | ------------------------------------------------------------ |
