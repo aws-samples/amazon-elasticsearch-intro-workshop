@@ -127,7 +127,7 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 1. AWS マネジメントコンソールの画面左上にある [サービス] から **[Kinesis]** のページを開いてください．画面右上の **"Kinesis Firehose 配信ストリーム"** から，先ほど作成した **[workshop-firehose]** を選択します．ストリームの詳細画面で，**"IAM role"** に表示されている **[workshop_firehose_delivery_role]** のリンクをクリックしてください
 2. IAM の管理画面で，**"ロール ARN"** の右にある **"arn:aws:iam::123456789012:role/workshop_firehose_delivery_role"** のような文字列をコピーします（この値は，各人で異なったものであるため，必ず画面上でコピーしてくだい）．これが Firehose の AWS リソースへのアクセス権限を管理する，IAM ロールと呼ばれるものです
 3. 続いて Kibana の管理画面に戻ります．画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開いてください．**"Permissions and Roles"** の下にある **[Role Mappings]** をクリックして，ロール紐付け画面に進みます
-4.  画面右側の + ボタンをクリックして，新しい紐付けの作成画面を開きます．画面上部の **"Role:"** 下のプルダウンメニューから，先ほど作成した **[opendistro_firehose_role]** を選択します．続いて **"Backend roles"** にある **[+ Add Backend Role]** ボタンを押して， 先ほどコピーしたロール ARN の文字列を貼り付けてください
+4.  画面右側の + ボタンをクリックして，新しい紐付けの作成画面を開きます．画面上部の **"Role:"** 下のプルダウンメニューから，先ほど作成した **[workshop_firehose_delivery_role]** を選択します．続いて **"Backend roles"** にある **[+ Add Backend Role]** ボタンを押して， 先ほどコピーしたロール ARN の文字列を貼り付けてください
 5. 最後に **[Submit]** を押して，紐付けを完了します
 
 ## Section 4: Kinesis Data Generator のセットアップ
