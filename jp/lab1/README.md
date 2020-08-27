@@ -51,7 +51,7 @@ Amazon ES における典型的な Easticsearch クラスターの構成は，�
 6. 次に **"Index"** で **"workshop-log"** と入力してください．Amazon ES の Index は，非常に噛み砕いた例えをするなら DB でいうところのテーブルに相当するものですが，この Firehose ストリームから送られたログは workshop-log という index に挿入されることになります．挿入時に Amazon ES 側に Index が存在しない場合には，自動で Index が作成されます
 7. また **"Index rotation"** でプルダウンから **[Every hour]** を選択してください．この設定を行うことで，新しい index が 1 時間ごとに作成されます．index 名も "workshop-log-2020-04-01-09" のように，後ろに日時をつけた形で作成されます．これにより，ストリームで流れてくるデータを一定の日時ごとに区切って取り扱うことができるようになります（この形をとる意味については，Lab 3 で詳しく説明します）
 8. その下の **"S3 backup"** で，**"Back up S3 bucket"** の右側 **[Create new]** ボタンを押して，S3 バケットの作成画面に進みます．**"S3 bucket name"** に，**"workshop-YYYYMMDD-YOURNAME"** と入力します（YYYYMMDD は 20200701 のように，今日の日付と置き換えてください．また YOURNAME は taroyamada のようにご自身の名前と置き換えてください．この場合バケット名は "workshop-20200701-taroyamada" となります）．このバケットは， Firehose から Amazon ES に挿入する際にエラーになったレコードを，バックアップとして格納するためのものです
-9. **"Step 4: Configure settings"** で，一番下の "Permission" において **[Cteate or update IAM role]** ボタンを押します．**"IAM ロール"** で **[新しい IAM ロールの作成]** を選択して，**"ロール名"** に **"workshop_firehose_delivery_role"** と入力して **[許可]** ボタンを押します．下の画面に戻ったら **[Next]** を押します
+9. **"Step 4: Configure settings"** で，一番下の "Permission" において **[Cteate or update IAM role KInesisFirehoseServiceRole-XXX....]** を選択してから，**[Next]** を押します
 10. **"Step 5: Review"** で，これまでの設定内容を眺めて，特に問題がなければ画面右下の **[Create delivery stream]** を押してドメインを作成してください．ストリームの作成には数分程度かかります
 
 ### 解説
@@ -116,11 +116,14 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 3. ログイン後の画面では，**[Explore on my own]** を選択します．続いて画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開きます
 4. **"Permissions and Roles"** の下にある **[Roles]** をクリックして，ロール管理画面に進みます．Amazon ES にログを挿入する用のロールを作成するために，画面右側の + ボタンをクリックします
    ![role_setting](../images/role_setting.png)
-5. **"Role name"** に **"workshop_firehose_delivery_role"** と入力します．続いて上側の **[Cluster Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add Action Group]** ボタンを押します．プルダウンメニューから **[cluster_composite_ops]** を選択します．続いてもう一度 **[+ Add Action Group]** ボタンを押し，**[cluster_monitor]** を追加します．これらの権限は，クラスターの情報を読み取るためのもので，Open Distro 側であらかじめ定義されているものになります．詳細を知りたい方は[こちら](https://opendistro.github.io/for-elasticsearch-docs/docs/security/access-control/default-action-groups/#cluster-level)をご確認ください．これによって，下図のような状態になります
+5. **"Role name"** に **"workshop_firehose_delivery_role"** と入力します
+   ![role_setting](../images/role_name.png)
+   
+6. 続いて上側の **[Cluster Permissions]** タブを選択してクラスター権限設定のメニューを開いたら，**[+ Add Action Group]** ボタンを押します．プルダウンメニューから **[cluster_composite_ops]** を選択します．続いてもう一度 **[+ Add Action Group]** ボタンを押し，**[cluster_monitor]** を追加します．これらの権限は，クラスターの情報を読み取るためのもので，Open Distro 側であらかじめ定義されているものになります．詳細を知りたい方は[こちら](https://opendistro.github.io/for-elasticsearch-docs/docs/security/access-control/default-action-groups/#cluster-level)をご確認ください．これによって，下図のような状態になります
    ![cluster_permissions](../images/cluster_permissions.png)
-6. 次に上側の **[Index Permissions]** タブを選択し，**[Add index permissions]** ボタンを押します．**"Index patterns"** に，先ほど Firehose 側で指定した index 名を含む **"workshop-log-*"** を入力してください．これは実際の index 名は "workshop-log-2020-04-01-09" のように，後ろに日付がつく形で作成されるため，これらを全て含む必要があるためです．続いてその下の **"Permissions: Action Groups"** で，この index に対して許可するアクションを設定します．**[+ Add Action Group]** を押して，プルダウンメニューから **[create_index]** を選択します．同様に **[+ Add Action Group]** から **[manage]** と **[crud]** を追加します．最終的な状態は以下のようになります
+7. 次に上側の **[Index Permissions]** タブを選択し，**[Add index permissions]** ボタンを押します．**"Index patterns"** に，先ほど Firehose 側で指定した index 名を含む **"workshop-log-*"** を入力してください．これは実際の index 名は "workshop-log-2020-04-01-09" のように，後ろに日付がつく形で作成されるため，これらを全て含む必要があるためです．続いてその下の **"Permissions: Action Groups"** で，この index に対して許可するアクションを設定します．**[+ Add Action Group]** を押して，プルダウンメニューから **[create_index]** を選択します．同様に **[+ Add Action Group]** から **[manage]** と **[crud]** を追加します．最終的な状態は以下のようになります
    ![index_permissions](../images/index_permissions.png)
-7. 画面下側の，**[Save Role Definition]** ボタンを押して，ロールを作成してください
+8. 画面下側の，**[Save Role Definition]** ボタンを押して，ロールを作成してください
 
 ### Open Distro ロールと IAM ロールの紐付け
 
