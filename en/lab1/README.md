@@ -51,7 +51,7 @@ In this section, you will create a Firehose stream that you can use to insert lo
 6. Enter **"workshop-log"** in **"Index"**. Amazon ES Index is equivalent to a table in DB in a simple analogy, but the log sent from this Firehose stream will be inserted into the index called workshop-log. If there is no Index on the Amazon ES in inserting, an Index is automatically created.
 7. Choose **[Every hour]** from the pull-down menu in **“Index rotation”**. With this setting, a new index is created every hour. The index name is also created with the date and time, such as "workshop-log-2020-04-01-09". This makes it possible to separate the data flowing in the stream by a certain date and time (the meaning of using this setting will be explained in more detail in Lab 3).
 8. In **"S3 backup"** below, click **[Create new]** button on the right of **"Back up S3 bucket"** to go to Create S3 bucket. In **"S3 bucket name"**, enter **"workshop-firehose-backup-YYYMMDD-YOURNAME"** (Replace YYYMMDD with today's date, for example, 20200701. And then, replace YOURNAME with your name like taroyamada. In this case, the bucket name will be “workshop-firehose-backup-20200701-taroyamada”). This bucket is used to store a backup of records that fail when inserting them from Firehose into Amazon ES.
-9. In **"Step 4: Configure settings"**, choose **[Cteate or update IAM role KInesisFirehoseServiceRole-XXX...]** and click **[Next]** button.
+9. In **"Step 4: Configure settings"**, choose **[Cteate or update IAM role KinesisFirehoseServiceRole-XXX...]** and click **[Next]** button.
 11. In **"Step 5: Review"**, review the settings you have entered in the above, and if there is no concern to them, click **[Create delivery stream]** to create a domain. It takes a few minutes to create the stream.
 
 ### Explanation
@@ -126,8 +126,8 @@ In this section, you will define a new write role with permission to add logs to
 
 ### Mapping Open Distro Roles with IAM Roles
 
-1. Go to **[Kinesis]** page from [Services] on the top left of the AWS Management Console.　From **"Kinesis Firehose Stream"** in the top right of the screen, choose **[workshop-firehose]** you have created in this Lab.　On the stream details screen, click the link **[workshop_firehose_delivery_role]** displayed in **"IAM role"**.
-2. In the IAM management console, click **"arn:aws:iam::123456789012:role/workshop_firehose_delivery_role"** to the right of **"Role ARN"**. (tthis value is different individually, so that make sure it on the screen and then copy it) This is the IAM role that manages permissions to AWS resources for Firehose.
+1. Go to **[Kinesis]** page from [Services] on the top left of the AWS Management Console.　From **"Kinesis Firehose Stream"** in the top right of the screen, choose **[workshop-firehose]** you have created in this Lab.　On the stream details screen, click the link **[KinesisFirehoseServiceRole-XXX...]** displayed in **"IAM role"**.
+2. In the IAM management console, click **"arn:aws:iam::123456789012:role/KinesisFirehoseServiceRole-XXX..."** to the right of **"Role ARN"**. (tthis value is different individually, so that make sure it on the screen and then copy it) This is the IAM role that manages permissions to AWS resources for Firehose.
 3. Go back to the management screen for Kibana. Next, click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the security settings menu. Then, click **[Role Mappings]** under **"Permissions and Roles"** to go to the Role Mapping screen.
 4. Click + button on the right of the screen to open the new mapping screen.From the pull-down menu under **"Role:"** at the top of the screen, choose **[workshop_firehose_delivery_role]** you have created in the above. Then, click **[+ Add Backend Role]** button in **"Backend roles"**, and paste the string of Role ARN you have copied in the above.
 5. At last, click **[Submit]** to complete the mapping.

@@ -51,7 +51,7 @@ Amazon ES における典型的な Easticsearch クラスターの構成は，�
 6. 次に **"Index"** で **"workshop-log"** と入力してください．Amazon ES の Index は，非常に噛み砕いた例えをするなら DB でいうところのテーブルに相当するものですが，この Firehose ストリームから送られたログは workshop-log という index に挿入されることになります．挿入時に Amazon ES 側に Index が存在しない場合には，自動で Index が作成されます
 7. また **"Index rotation"** でプルダウンから **[Every hour]** を選択してください．この設定を行うことで，新しい index が 1 時間ごとに作成されます．index 名も "workshop-log-2020-04-01-09" のように，後ろに日時をつけた形で作成されます．これにより，ストリームで流れてくるデータを一定の日時ごとに区切って取り扱うことができるようになります（この形をとる意味については，Lab 3 で詳しく説明します）
 8. その下の **"S3 backup"** で，**"Back up S3 bucket"** の右側 **[Create new]** ボタンを押して，S3 バケットの作成画面に進みます．**"S3 bucket name"** に，**"workshop-YYYYMMDD-YOURNAME"** と入力します（YYYYMMDD は 20200701 のように，今日の日付と置き換えてください．また YOURNAME は taroyamada のようにご自身の名前と置き換えてください．この場合バケット名は "workshop-20200701-taroyamada" となります）．このバケットは， Firehose から Amazon ES に挿入する際にエラーになったレコードを，バックアップとして格納するためのものです
-9. **"Step 4: Configure settings"** で，一番下の "Permission" において **[Cteate or update IAM role KInesisFirehoseServiceRole-XXX....]** を選択してから，**[Next]** を押します
+9. **"Step 4: Configure settings"** で，一番下の "Permission" において **[Cteate or update IAM role KinesisFirehoseServiceRole-XXX....]** を選択してから，**[Next]** を押します
 10. **"Step 5: Review"** で，これまでの設定内容を眺めて，特に問題がなければ画面右下の **[Create delivery stream]** を押してドメインを作成してください．ストリームの作成には数分程度かかります
 
 ### 解説
@@ -127,8 +127,8 @@ Amazon ES では，オープンソースの Elasticsearch ディストリビュ�
 
 ### Open Distro ロールと IAM ロールの紐付け
 
-1. AWS マネジメントコンソールの画面左上にある [サービス] から **[Kinesis]** のページを開いてください．画面右上の **"Kinesis Firehose 配信ストリーム"** から，先ほど作成した **[workshop-firehose]** を選択します．ストリームの詳細画面で，**"IAM role"** に表示されている **[workshop_firehose_delivery_role]** のリンクをクリックしてください
-2. IAM の管理画面で，**"ロール ARN"** の右にある **"arn:aws:iam::123456789012:role/workshop_firehose_delivery_role"** のような文字列をコピーします（この値は，各人で異なったものであるため，必ず画面上でコピーしてくだい）．これが Firehose の AWS リソースへのアクセス権限を管理する，IAM ロールと呼ばれるものです
+1. AWS マネジメントコンソールの画面左上にある [サービス] から **[Kinesis]** のページを開いてください．画面右上の **"Kinesis Firehose 配信ストリーム"** から，先ほど作成した **[workshop-firehose]** を選択します．ストリームの詳細画面で，**"IAM role"** に表示されている **[KinesisFirehoseServiceRole-XXX...]** のリンクをクリックしてください
+2. IAM の管理画面で，**"ロール ARN"** の右にある **"arn:aws:iam::123456789012:role/KinesisFirehoseServiceRole-XXX..."** のような文字列をコピーします（この値は，各人で異なったものであるため，必ず画面上でコピーしてくだい）．これが Firehose の AWS リソースへのアクセス権限を管理する，IAM ロールと呼ばれるものです
 3. 続いて Kibana の管理画面に戻ります．画面左側の![kibana_security](../images/kibana_security.png)マークをクリックして，セキュリティ設定のメニューを開いてください．**"Permissions and Roles"** の下にある **[Role Mappings]** をクリックして，ロール紐付け画面に進みます
 4.  画面右側の + ボタンをクリックして，新しい紐付けの作成画面を開きます．画面上部の **"Role:"** 下のプルダウンメニューから，先ほど作成した **[workshop_firehose_delivery_role]** を選択します．続いて **"Backend roles"** にある **[+ Add Backend Role]** ボタンを押して， 先ほどコピーしたロール ARN の文字列を貼り付けてください
 5. 最後に **[Submit]** を押して，紐付けを完了します
