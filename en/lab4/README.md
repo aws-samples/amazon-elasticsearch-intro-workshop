@@ -10,7 +10,7 @@ So far, you have been trying on Amazon ES features, mainly log analysis. However
 
 First, you will create a new index to perform full-text search.
 
-1. Click ![kibana_devtools](../images/kibana_devtools.png) icon on the left of the screen to open the Dev tools menu.
+1. Open **"Dev Tools"** menu on the left of the screen to open the Dev tools screen.
 
 2. Copy the following block of codes to the **"Console"** below, and click ▶ button on the right to execute the API. In this example, an index called mydocs which has only one field called "content" will be created. In Lab 2, the index that automatically recognizes field mappings on Amazon ES when inserting data has created, but here the index designated with mapping in advance to clearly analyze texts will be created.
 
@@ -488,7 +488,7 @@ In this section, you will try to write a query using SQL as a tertiary method no
 
 Again, you will execute the API using Dev tools as before.
 
-1. Click ![kibana_devtools](../images/kibana_devtools.png) icon on the left of the screen to open the Dev tools menu.
+1. Click **"Dev Tools"** menu on the left of the screen to open the Dev tools screen.
 
 2. Copy the following block of codes to the **"Console"** below, and click ▶ button on the right to execute the API. This means that for all indexes that fit **"workshop-log-*"**, the number of records per status and the average temperature is aggregated. As described in Section 2 of Lab 2, when performing the grouping processing, the field of keyword type is required. Here we use status.keyword.
 

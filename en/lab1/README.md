@@ -15,13 +15,14 @@ In this section, you will create an Amazon ES domain. In Amazon ES, Elasticsearc
 ### Creating an Amazon ES Domain
 
 1. Log in to the AWS Management Console. After logging in, confirm that **[N. Virginia]** is chosen by the region selector in the right of the header in the console screen. If **[N. Virginia]** is not chosen, click the region name and change to **[N. Virginia]**.
-2. Click [Services] in the top left of the AWS Management Console to display a list of services, and choose **[Elasticsearch Service]** (The search window in the top of the condole screen allows you to narrow down the service by entering such as **"elasticsearch"**). Go to Elasticsearch, click **[Create a new domain]** button to proceed to the domain creation.
-3. In **"Step 1: Choose deployment type"**, choose **["Development and testing"]** in **"Deployment type"**. Do not change the version, and click **[Next]**.
-4. In **"Step 2: Configure domain"**, enter **"workshop-esdomain"** in **"Elasticsearch domain name"**. Do not change the rest, and click **[Next]**.
-5. In **"Step 3: Configure access and security"**, choose **[Public access]** in **"Network configuration"**. Then, choose **[Create master user]** in in **"Fine–grained access control"**. The master user account you will created here is used to log in to the visualization tool Kibana on Amazon ES. Enter any **master user name** and **master password** by following the instructions. The master user name must be between 1 and 16 characters. The master password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character. The user name and password you set here will be used in Section 3.
-6. Next, set an access policy. Click [here](https://www.cman.jp/network/support/go_access.cgi) to confirm your IP address. Then, choose **[Custom access policies]** in **Domain access policy**, and choose **[IPv4 address]** in the item below. In the blank to the right, enter your IP address that you have confirmed in the above, and choose **[Allow]** on the right item. Click **[Next]** at the bottom of the screen after setting up to here.
+1. Click [Services] in the top left of the AWS Management Console to display a list of services, and choose **[Elasticsearch Service]** (The search window in the top of the condole screen allows you to narrow down the service by entering such as **"elasticsearch"**). Go to Elasticsearch, click **[Create a new domain]** button to proceed to the domain creation.
+1. In **"Step 1: Choose deployment type"**, choose **["Development and testing"]** in **"Deployment type"**. Do not change the version, and click **[Next]**.
+1. In **"Step 2: Configure domain"**, enter **"workshop-esdomain"** in **"Elasticsearch domain name"**. Do not change the rest, and click **[Next]**.
+1. In **"Step 3: Configure access and security"**, choose **[Public access]** in **"Network configuration"**. Then, choose **[Create master user]** in in **"Fine–grained access control"**. The master user account you will created here is used to log in to the visualization tool Kibana on Amazon ES. Enter any **master user name** and **master password** by following the instructions. The master user name must be between 1 and 16 characters. The master password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character. The user name and password you set here will be used in Section 3.
+1. Next, set an access policy. Click [here](https://www.cman.jp/network/support/go_access.cgi) to confirm your IP address. Then, choose **[Custom access policies]** in **Domain access policy**, and choose **[IPv4 address]** in the item below. In the blank to the right, enter your IP address that you have confirmed in the above, and choose **[Allow]** on the right item. Click **[Next]** at the bottom of the screen after setting up to here.
    ![access_policy](../images/access_policy.png)
-7. In **"Step 4: Review"**, review the settings you have made in the above, and if there is no concern to them, click **[Confirm]** at the bottom right of the screen to create the domain. It takes approximately 15 minutes to create the domain. Meanwhile, move onto a Firehose stream creation in Section 2.
+1. In **"Step 4: Add tags - optional"**, add tags if necessary, and click **[Next]**.
+1. In **"Step 5: Review"**, review the settings you have made in the above, and if there is no concern to them, click **[Confirm]** at the bottom right of the screen to create the domain. It takes approximately 15 minutes to create the domain. Meanwhile, move onto a Firehose stream creation in Section 2.
 
 ### Explanation: About Amazon ES
 
@@ -44,15 +45,16 @@ In this section, you will create a Firehose stream that you can use to insert lo
 ### Creating a Firehose Stream
 
 1. In a similar manner with the Section 1, confirm that **[N. Virginia]** is chosen by the region selector in the right of the header in the console screen. If **[N. Virginia]** is not selected, click the region name and change to **[N. Virginia]**.Then, go to the **[Kinesis]** page from [Service] in the top left of the AWS Management Console screen.
-2. Choose **[Kinesis Data Firehose]** in Get started in the right top of the screen. Then, click **[Create delivery stream]** to go to the Firehose stream creation page.
-3. In **"Step 1: Name and source"**, enter **"workshop-firehose"** in **"Delivery stream name"**. Then, click **[Next]** without changing any other settings
-4. In **"Step 2: Process records"**, does not change anything, and click **[Next]**.
-5. In **"Step 3: Choose a destination"**, choose **[Amazon Elasticsearch Service]** in **"Destionation"**. Then, in **"Domain"** at **"Amazon Elasticsearch Service destination"**, choose **["workshop-esdomain"]** you have created in Section 1. You can now automatically send logs into Amazon ES above.If Domain is in Processing status, wait until it is selectable.
-6. Enter **"workshop-log"** in **"Index"**. Amazon ES Index is equivalent to a table in DB in a simple analogy, but the log sent from this Firehose stream will be inserted into the index called workshop-log. If there is no Index on the Amazon ES in inserting, an Index is automatically created.
-7. Choose **[Every hour]** from the pull-down menu in **“Index rotation”**. With this setting, a new index is created every hour. The index name is also created with the date and time, such as "workshop-log-2020-04-01-09". This makes it possible to separate the data flowing in the stream by a certain date and time (the meaning of using this setting will be explained in more detail in Lab 3).
-8. In **"S3 backup"** below, click **[Create new]** button on the right of **"Back up S3 bucket"** to go to Create S3 bucket. In **"S3 bucket name"**, enter **"workshop-firehose-backup-YYYMMDD-YOURNAME"** (Replace YYYMMDD with today's date, for example, 20200701. And then, replace YOURNAME with your name like taroyamada. In this case, the bucket name will be “workshop-firehose-backup-20200701-taroyamada”). This bucket is used to store a backup of records that fail when inserting them from Firehose into Amazon ES.
-9. In **"Step 4: Configure settings"**, choose **[Cteate or update IAM role KinesisFirehoseServiceRole-XXX...]** and click **[Next]** button.
-11. In **"Step 5: Review"**, review the settings you have entered in the above, and if there is no concern to them, click **[Create delivery stream]** to create a domain. It takes a few minutes to create the stream.
+1. Choose **[Kinesis Data Firehose]** in **[Get started]** in the right top of the screen. Then, click **[Create delivery stream]** to go to the Firehose stream creation page.
+  ![kinesis_home](../images/kinesis_home.png)
+1. In **"Step 1: Name and source"**, enter **"workshop-firehose"** in **"Delivery stream name"**. Then, click **[Next]** without changing any other settings
+1. In **"Step 2: Process records"**, does not change anything, and click **[Next]**.
+1. In **"Step 3: Choose a destination"**, choose **[Amazon Elasticsearch Service]** in **"Destionation"**. Then, in **"Domain"** at **"Amazon Elasticsearch Service destination"**, choose **["workshop-esdomain"]** you have created in Section 1. You can now automatically send logs into Amazon ES above.If Domain is in Processing status, wait until it is selectable.
+1. Enter **"workshop-log"** in **"Index"**. Amazon ES Index is equivalent to a table in DB in a simple analogy, but the log sent from this Firehose stream will be inserted into the index called workshop-log. If there is no Index on the Amazon ES in inserting, an Index is automatically created.
+1. Choose **[Every hour]** from the pull-down menu in **“Index rotation”**. With this setting, a new index is created every hour. The index name is also created with the date and time, such as "workshop-log-2020-04-01-09". This makes it possible to separate the data flowing in the stream by a certain date and time (the meaning of using this setting will be explained in more detail in Lab 3).
+1. In **"S3 backup"** below, click **[Create new]** button on the right of **"Back up S3 bucket"** to go to Create S3 bucket. In **"S3 bucket name"**, enter **"workshop-firehose-backup-YYYMMDD-YOURNAME"** (Replace YYYMMDD with today's date, for example, 20200701. And then, replace YOURNAME with your name like taroyamada. In this case, the bucket name will be “workshop-firehose-backup-20200701-taroyamada”). This bucket is used to store a backup of records that fail when inserting them from Firehose into Amazon ES.
+1. In **"Step 4: Configure settings"**, choose **[Cteate or update IAM role KinesisFirehoseServiceRole-XXX...]** and click **[Next]** button.
+1. In **"Step 5: Review"**, review the settings you have entered in the above, and if there is no concern to them, click **[Create delivery stream]** to create a domain. It takes a few minutes to create the stream.
 
 ### Explanation
 
@@ -112,25 +114,29 @@ In this section, you will define a new write role with permission to add logs to
 ### Creating an Amazon ES Role
 
 1. Go to **[Amazon ES]** from [Service] in the top left of the AWS Management Console.
-2. Click **[workshop-esdomain]** you have created in the above　on the Amazon ES dashboard.　When the domain details are displayed, click the URL next to **"Kibana"**.　The login screen for Kibana is displayed, so that enter the master user and the master password specified in the Section 1.
-3. Choose **[Explore on my own]** on the screen after logging in. Then, click ![kibana_security](../images/kibana_security.png) mark on the left of the screen to open the security settings menu.
-4. Click **[Roles]** under **"Permissions and Roles"** to go to the role management screen. Then, click + button on the right side of the screen to create a role for inserting logs into Amazon ES.
-   ![role_setting](../images/role_setting.png)
-5. Enter **"workshop_firehose_delivery_role"** in **"Role name"**.
+1. Click **[workshop-esdomain]** you have created in the above　on the Amazon ES dashboard.　When the domain details are displayed, click the URL next to **"Kibana"**.　The login screen for Kibana is displayed, so that enter the master user and the master password specified in the Section 1.
+1. Choose **[Explore on my own]** on **[Welcome to Elastic]** screen after logging in. Then, choose **[Private]** and click **[Confirm]** on **[Select your tenant]** screen.
+1. Then, click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen and choose **[Security]** menu.
+1. Click **[Create new Role]**  on **[Get started]** screen.
+  ![security_get_started_create_new_role](../images/security_get_started_create_new_role.png)
+1. Enter **"workshop_firehose_delivery_role"** in **"Name"**.
    ![role_setting](../images/role_name.png)
-6. Choose the upper **[Cluster Permissions]** tab to open the menu of cluster permission setting, and click **[+ Add Action Group]** button. Next, choose **[cluster_composite_ops]** from the pull-down menu. Then, click **[+ Add Action Group]** button again, and add **[cluster_monitor]**. These permissions are used to read cluster information, and are predefined in Open Distro. For more information, please click [here](https://opendistro.github.io/for-elasticsearch-docs/docs/security/access-control/default-action-groups/#cluster-level). The diagram below shows you the configuration you have set the steps above.
+1. Add **"cluster_composite_ops"** and **"cluster_monitor"** to **[Cluster permissions]**. These permissions are used to read cluster information, and are predefined in Open Distro. For more information, please click [here](https://opendistro.github.io/for-elasticsearch-docs/docs/security/access-control/default-action-groups/#cluster-level).
    ![cluster_permissions](../images/cluster_permissions.png)
-7. Choose the upper **[Index Permissions]** tab, and click **[Add index permissions]** button. Then, enter **"workshop-log-*"** including the index name designated in Firehose earlier in **"Index patterns"**. The real index name will be created with a date in the end of the name like "workshop-log-2020-04-01-09", therefore all those should be included. Next, set the action to grant the permission to this index under **"Permissions:Action Groups"**. Then, click **[+ Add Action Group]**, and choose **[create_index]** from the pull-down menu. In a similar manner, add **[manage]** and **[crud]** from **[+ Add Action Group]**. The final state will be as follows.
+1. Enter **"workshop-log-*"** including the index name designated in Firehose earlier in **"Index"** in **[Index permissions]** section. The real index name will be created with a date in the end of the name like "workshop-log-2020-04-01-09", therefore all those should be included. Then, add  **"create_index"**, **"manage"**, **"crud"** to **"Index permissions"**.
    ![index_permissions](../images/index_permissions.png)
-8. Click **[Save Role Definition]** button at the bottom of the screen to create the role.
+1. Click **[Create]** button at the bottom of the screen to create the role.
 
 ### Mapping Open Distro Roles with IAM Roles
 
-1. Go to **[Kinesis]** page from [Services] on the top left of the AWS Management Console.　From **"Kinesis Firehose Stream"** in the top right of the screen, choose **[workshop-firehose]** you have created in this Lab.　On the stream details screen, click the link **[KinesisFirehoseServiceRole-XXX...]** displayed in **"IAM role"**.
-2. In the IAM management console, click **"arn:aws:iam::123456789012:role/KinesisFirehoseServiceRole-XXX..."** to the right of **"Role ARN"**. (tthis value is different individually, so that make sure it on the screen and then copy it) This is the IAM role that manages permissions to AWS resources for Firehose.
-3. Go back to the management screen for Kibana. Next, click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the security settings menu. Then, click **[Role Mappings]** under **"Permissions and Roles"** to go to the Role Mapping screen.
-4. Click + button on the right of the screen to open the new mapping screen.From the pull-down menu under **"Role:"** at the top of the screen, choose **[workshop_firehose_delivery_role]** you have created in the above. Then, click **[+ Add Backend Role]** button in **"Backend roles"**, and paste the string of Role ARN you have copied in the above.
-5. At last, click **[Submit]** to complete the mapping.
+1. Go to **[Kinesis]** page from [Services] on the top left of the AWS Management Console.　Open **"Delivery Stream"** on the left side menu, choose **[workshop-firehose]** you have created in this Lab.　On the stream details screen, click the link **[KinesisFirehoseServiceRole-XXX...]** displayed in **"IAM role"**.
+1. In the IAM management console, click **"arn:aws:iam::123456789012:role/KinesisFirehoseServiceRole-XXX..."** to the right of **"Role ARN"**. (this value is different individually, so that make sure it on the screen and then copy it) This is the IAM role that manages permissions to AWS resources for Firehose.
+1. Go back to the management screen for Kibana. Next, click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen and choose **[Security]** menu. Then, choose **[Roles]** from the left side menu to go to the role list screen.
+1. Choose **"workshop_firehose_delivery_role"** from **"Roles"**.
+1. Open **[Mapped users]** tab, and click **[Manage mapping]** button.
+   ![security_mapped_users](../images/security_mapped_users.png)
+1. Paste the string of Role ARN you have copied in the above, and click **[Map]** button.
+   ![security_map_user](../images/security_map_user.png)
 
 ## Section 4: Setting Up Kinesis Data Generator
 
@@ -141,23 +147,23 @@ In this section, set up the Kinesis Data Generator. Kinesis Data Generator is a 
 ### Creating Required Resources with CloudFormation
 
 1. Click [here](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=Kinesis-Data-Generator-Cognito-User&templateURL=https://aws-kdg-tools.s3.us-west-2.amazonaws.com/cognito-setup.json) to start with the CloudFormation stack creation screen. Kinesis Data Generator uses a service called Amazon Cognito at the backend for login authentication and authorization of log sending permissions. By creating this CloudFormation stack, you can create the necessary Cognito resources.
-2. In **"Step 1: Specify template"**, make sure that the Amazon S3 URL where the template source is located has already entered. This CloudFormation stack creation is only available in the Oregon region. Therefore, the region selection in the top right of the screen is set to **[Oregon]**, so click **[Next]** without any changes.
-3. In **"Step 2: Specify stack details"**, enter the appropriate value for **"Username"** and **"Password"** for **"Kinesis Data Generator"**. The username and password specified here will be used to log in to Kinesis Data Gnerator later. Once you have entered, click **[Next]**.
-4. In **"Step 3: Configure stack options"**, click **[Next]** without any changes.
-5. In **"Step 4: Review"**, check the check-box of **"I acknowledge that AWS CloudFormation might create IAM resources with custom names "** at to bottom of the screen, and then click **[Create stack]** button to start the stack creation.
-6. Wait for a few minutes until the stack status changes  CREATE_COMPLETE.
+1. In **"Step 1: Specify template"**, make sure that the Amazon S3 URL where the template source is located has already entered. This CloudFormation stack creation is only available in the Oregon region. Therefore, the region selection in the top right of the screen is set to **[Oregon]**, so click **[Next]** without any changes.
+1. In **"Step 2: Specify stack details"**, enter the appropriate value for **"Username"** and **"Password"** for **"Kinesis Data Generator"**. The username and password specified here will be used to log in to Kinesis Data Gnerator later. Once you have entered, click **[Next]**.
+1. In **"Step 3: Configure stack options"**, click **[Next]** without any changes.
+1. In **"Step 4: Review"**, check the check-box of **"I acknowledge that AWS CloudFormation might create IAM resources with custom names "** at to bottom of the screen, and then click **[Create stack]** button to start the stack creation.
+1. Wait for a few minutes until the stack status changes  CREATE_COMPLETE.
 
 ### Sending Logs from Kinesis Data Generator
 
 1. Choose **[Output]** tab of the CloudFormation stack you have created. You can open the setting screen of Kinesis Data Generator by clicking the URL of **"KinesisDataGeneratorUrl"** displayed.
 
-2. Enter the user name and password you have created in the the above step to **"Username"** and **"Password"** in the top right of the screen, and then login to it.
+1. Enter the user name and password you have created in the the above step to **"Username"** and **"Password"** in the top right of the screen, and then login to it.
 
-3. Configure the log transfer setting actually in this step. In **"Region"**, choose **[ap-northeast-1]** ( N. Virginia region), and then choose **[workshop-firehose]** you have created earlier in **Stream/delivery stream**.
+1. Configure the log transfer setting actually in this step. In **"Region"**, choose **[ap-northeast-1]** ( N. Virginia region), and then choose **[workshop-firehose]** you have created earlier in **Stream/delivery stream**.
 
-4. Enter **"5"** to **Records per second** (the number of log records generated per second). This means that 5 records are created per 1 second. As a result 300 records are generated in one minute, and then sent to Firehose.
+1. Enter **"5"** to **Records per second** (the number of log records generated per second). This means that 5 records are created per 1 second. As a result 300 records are generated in one minute, and then sent to Firehose.
 
-5. In **"Record template"** below, copy and paste the following codes into **Templete 1** field. This specifies the format for logging sent from IoT sensors. It automatically generates dummy log data using such as random numbers.
+1. In **"Record template"** below, copy and paste the following codes into **Templete 1** field. This specifies the format for logging sent from IoT sensors. It automatically generates dummy log data using such as random numbers.
 
    ```json
    {
@@ -177,13 +183,13 @@ In this section, set up the Kinesis Data Generator. Kinesis Data Generator is a 
    }
    ```
 
-6. When clicking [Test template] at the bottom of the screen, you can check the sample of the log being actually sent. You can see that five records are generated as follows:
+1. When clicking [Test template] at the bottom of the screen, you can check the sample of the log being actually sent. You can see that five records are generated as follows:
 
    ```json
    {    "sensorId": 42,    "currentTemperature": 38,    "ipaddress": "29.233.125.31",    "status": "OK",    "timestamp": "2020/03/03 12:49:12"}
    ```
 
-7. If there is no matter, click **[Send data]** button at last to start sending the log. The Data continues to be sent to Firehose until you click [Stop Sending Data to Kinesis] displayed in the pop-up menu or close the browser tab.
+1. If there is no matter, click **[Send data]** button at last to start sending the log. The Data continues to be sent to Firehose until you click [Stop Sending Data to Kinesis] displayed in the pop-up menu or close the browser tab.
 
 ## Section 5: Creating a Topic for Amazon SNS
 
@@ -196,8 +202,8 @@ In this section, you will create a topic for Amazon SNS and email delivery setti
 A topic in SNS is a unit for managing notifications. In Lab 3, Amazon ES will send alert notifications to this topic.
 
 1. Go to **[SNS]** page from **[Services]** in the top left of the AWS Management Console. Next, click the menu icon on the left of the screen to click Topics. Then, click **[Create topic]** button on the right to go to the topic creation screen.
-2. Enter **"amazon_es_alert"** in **"Name"**, **"amazon_es_alert"** in **"Display name"**, and click **[Create topic]** button.
-3. When you find the topic you have created in the topic list, copy the ARN that is in the right (the string is like  `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` ). You will create IAM roles later and use them in Lab 3.
+1. Choose **"Standard"** type, enter **"amazon_es_alert"** in **"Name"** and **"Display name"**, and click **[Create topic]** button.
+1. When you find the topic you have created in the topic list, copy the ARN that is in the right (the string is like  `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert` ). You will create IAM roles later and use them in Lab 3.
 
 ### Creating a Subscription
 
