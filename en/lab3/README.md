@@ -12,39 +12,38 @@ So in this section, it assumes that you are a user of the IoT department and pub
 
 First, you will create a space to open only to users of the IoT department in Kibana. Amazon ES uses the concept of tenants which is the scope to publish to a limited number of people. By default, there are Private tenants that only the user who created them can access, and Global tenants that are shared by all users. Let's add new tenants here for the IoT department.
 
-1. Click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the menu to set security.
-2. Click **[Tenants]** under **"Permissions and Roles"** to go to the screen to edit tenants. Then, click **[+ button]** on the right of the screen to create a new tenant.
-3. Enter **"IoT"** in **"Tenant name"**, and click **[Submit]**.
+1. Click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen, and open **[Security]**.
+2. Click **[Tenants]** on the left side of the screen to go to the screen to edit tenants. Then, click **[Create tenant]**  button on the right of the screen to create a new tenant.
+3. Enter **"IoT"** in **"Name"**, and click **[Create]**.
 
 Next, export existing index patterns, visuals, and dashboard data.
 
-1. Click ![kibana_management](../images/kibana_management.png) icon in the left menu to open the Management screen, and then click **[Saved Objects]** in the left.
+1. Click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen, and open **[Stack Management]**. Then, click **[Saved Objects]** in the left.
 2. A list of index patterns, visuals, and dashboards created in Lab 2 are displayed on the screen. Check all of these items, and click [Export] in the top right. A JSON file containing these settings will be downloaded.
 
 Then, switch the tenant and copy the data.
 
-1. Click ![kibana_tenants](../images/kibana_tenants.png) icon on the left of the screen to open the tenant settings menu. Then, click **[Select]** for the IoT tenant to switch between tenants.
-2. Click ![kibana_management](../images/kibana_management.png) icon in the left menu to open the Management screen, and then click **[Saved Objects]** in the left.
-3. Click **[Import]** button in the top right of the screen to choose the JSON file in the above and upload it. The dashboard and visuals mentioned in the earlier are now copied to your screen.
+1. Click user icon on the right corner of the screen, and click **"Switch tenants"**.
+1. Choose **"Choose from custom"** at **"Select your tenant"** dialog, choose **"IoT"**, and click **[Confirm]** button to switch tenants.
+1. Click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen, and open **[Stack Management]**. Then, click **[Saved Objects]** in the left.
+1. Click **[Import]** button in the top right of the screen to choose the JSON file in the above and upload it. The dashboard and visuals mentioned in the earlier are now copied to your screen.
 
 ### Creating a new Amazon ES role
 
 Now, you will create a role that is set of Amazon ES permissions to assign to users for the IoT department. The two types of roles will be created here for developers with write permission and for viewers with read-only permission. First, create a role for developers.
 
-1. Click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the security settings menu.
-2. Click **[Roles]** under **"Permissions and Roles"** to go to the role management screen, and click **[+]** button to open the new role creation menu.
-3. Enter **"iot_developer_role"** in **"Role name"**.
-4. Choose **[index Permissions]** tab at the top to open the cluster permissions settings menu, and click **[+ Add index permissions]** button. Enter **"workshop-log-*"** in **"Index patterns"**. Then, choose **[crud]** under **Permissions: Action Groups**.
-5. Choose **[Tenant Permissions]** tab in the top right, and click **[Add tenant permissions]**. Next, enter **"IoT"** in "**Tenant patterns**". From the pull-down menu, choose **[kibana_all_write]** for **"Permissions"**. Then, click **[Save Role Defintion]** button to complete the role creation.
+1. Click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen, and open **[Security]**.
+1. Click **[Create new Role]**  on **[Get started]** screen.
+1. Enter **"iot_developer_role"** in **"Name"**.
+1. Enter **"workshop-log-*"** including the index name designated in Firehose earlier in **"Index"** in **[Index permissions]** section. Then, add  **"crud"** to **"Index permissions"**.
+1. Click **[Create]** button at the bottom of the screen to create the role.
 
 In a similar manner, create roles for viewers.
 
-1. Click **[+]** button on the right of the role management screen.
-
-2. Enter **"iot_reader_role"** in **"Role name"**.
-
-3. Choose **[index Permissions]** tab at the top to open the menu to set permission of new cluster, and click **[+ Add index permissions]** button. Next, enter **"workshop-log-*"** in **"Index patterns"**. Choose **[read]** in **"Permissions: Action Groups"** below. Then, enter the following string for **"Document Level Security Query"**. This is an Elasticsearch query to display only workshop-log data which has OK in status field. At last, add **"ipaddress"** in  **"Anonymized fields"**. The following shows the configuration.
-
+1. Click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen, and open **[Security]**.
+1. Click **[Create new Role]**  on **[Get started]** screen.
+1. Enter **"iot_reader_role"** in **"Name"**.
+1. Enter **"workshop-log-*"** including the index name designated in Firehose earlier in **"Index"** in **[Index permissions]** section. Then, add  **"read"** to **"Index permissions"**. Then, enter the following string for **"Document Level Security Query"**. This is an Elasticsearch query to display only workshop-log data which has OK in status field. At last, add **"ipaddress"** in  **"Anonymization"**. The following shows the configuration.
    ```json
    {
      "bool": {
@@ -59,41 +58,45 @@ In a similar manner, create roles for viewers.
 
    ![role_iot_reader](../images/role_iot_reader.png)
 
-4. Choose **[Tenant Permissions]** tab at the top of the screen, and click **[Add tenant permissions]**. Next, enter **"IoT"** in "**Tenant patterns**". Choose **[kibana_all_read]** from the pull-down menu of **"Permissions"**. Then, click **[Save Role Defintion]** button to complete to create the role.
+1. Add **"IoT"** to **"Tenant"** in "**Tenant permissions** section", and choose **[Read Only]** from the pull-down menu on the right side of **"Tenant"**.
+1. Click **[Create]** button at the bottom of the screen to create the role.
 
 ### Setting up Kibana users and mapping roles
 
 Now, you will create a user to log in to Kibana.
 
-1. Click ![kibana_security](../images/kibana_security.png) icon on the left of the screen to open the menu to set security.
-2. Click **[Intenral User Database]** button to go to the user management page. Next, click **[+]** button in the top right of the screen to open the new user creation screen. Enter **"iot_developer"** in **"Username"** and the appropriate string in **"Password"** and **"Repeat Password"**, and then click **[Submit]**.
-3. In a similar manner, create browsing users as well. Click **[+]** button in the top right of the screen to open the new user creation screen. Enter **"iot_reader"** in **"Username"** and the appropriate string in **"Password"** and **"Repeat Password"**, and then click **[Submit]**.
+1. Click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen, and open **[Security]**.
+1. Click **[Create internal user]**  on **[Get started]** screen.
+1. Enter **"iot_developer"** in **"Username"** and the appropriate string in **"Password"** and **"Repeat Password"**, and then click **[Create]**.
+1. In a similar manner, create browsing users as well. Click **[Create internal user]** button in the top right of the screen to open the new user creation screen. Enter **"iot_reader"** in **"Username"** and the appropriate string in **"Password"** and **"Repeat Password"**, and then click **[Create]**.
 
 At last, associate the created user with the role you have prepared earlier.
 
-1. Click **[Role Mappings]** button from the top screen of the security settings.
-2. Click **[+]** button in the top right of the screen, and choose **[iot_developer_role from]** from the pull-down menu of **"Role"**. Then, enter the user name **"iot_developer"** you have created earlier into **"Users"**. At last, click **[Submit]** to complete the mapping.
-3. For the viewer, in a similar manner, click **[+]** button in the top right of the screen, and choose **[iot_reader_role]** from the pull-down menu of **"Role"**. Then, enter **"iot_reader"** in **"Users"**, and click **[Submit]** to complete the mapping.
-4. In addition, to use the Kibana UI, you must grant both developers and viewers a predefined kibana_user role on Amazon ES. Click **[+]** button in the top right of the screen, and choose **[kibana_user]** from the pull-down menu of **"Role"**. Then, enter **"iot_developer"** in **"Users"**, click **[+ Add User]** button to add **"iot_reader"**, and click **[Submit]**.
+1. Click ![kibana_hamburger](../images/kibana_hamburger.png) icon on the left side of the screen, and open **[Security]**.
+1. Click **[Roles]** on the left side of the screen to open a role list.
+1. Choose **"iot_developer_role"** from the roll list.
+1. Open **[Mapped users]**, and click **[Manage mapping]** button.
+1. Choose **"iot_developer"** from the pull-down menu of **"Users"**, and click **"Map"** button.
+1. For the viewer, in a similar manner, map **"iot_reader_role"** role to **"iot_reader"** user.
+1. In addition, to use the Kibana UI, you must grant both developers and viewers a predefined kibana_user role on Amazon ES. Map **"kibana_user"** role to **"iot_reader"** user and **"iot_developer"** user.
 
 Now, you have completed the tasks of tenants creation, roles and users creation and the mapping. Then, let's try logging in as the user you have created, and then make sure that the permissions are working as expected.
 
 ### Log in as the user you created and check the permissions
 
 First, you will log in with iot_developer.
-
-1. Click the user name **[awsuser]** in the top right of the Kibana screen, and temporarily log out from Kibana. Go back to the login screen, and log in with the iot_developer account you have created.
-2. You can confirm that there is no ![kibana_security](../images/kibana_security.png) icon in the left menu of the screen after logging in. The iot_deveoper user cannot access this menu because it does not have the administrator credential.
-3. Click ![kibana_tenants](../images/kibana_tenants.png) icon on the left of the screen to open the tenant settings menu. Then, click **[Select]** for the IoT tenant to switch between tenants.
-4. Make sure you have access to such as Discover, Visualize, and Dashboards, and you can search and create visuals.
+1. Click user icon on the right corner of the screen, and click **"Log out"** to log out from Kibana. Go back to the login screen, and log in with the iot_developer account you have created.
+1. You can confirm that there is no **"Security"** item in the left menu of the screen after logging in. The iot_deveoper user cannot access this menu because it does not have the administrator credential.
+1. Click user icon on the right corner of the screen, and switch tenant to **"IoT"**.
+1. Make sure you have access to such as Discover, Visualize, and Dashboards, and you can search and create visuals.
 
 Next, you will try logging in with iot_reader.
 
-1. Click the user name **[iot_developer]** in the top right of the Kibana screen, and temporarily log out of Kibana. Go back to the login screen, and log in with the iot_reader account you have created.
-2. Click ![kibana_tenants](../images/kibana_tenants.png) icon on the left of the screen to open the tenant settings menu. Then, click **[Select]** for the IoT tenant to switch between tenants.
-3. Open the Discover page, adjust the time range of the target data appropriately, and display the data. You can see that the ip_address column is hashed as follows. This is because the ipaddress column was specified in the anonymized fields of iot_reader_role you have created earlier.
+1. Click user icon on the right corner of the screen, and click **"Log out"** to log out from Kibana. Go back to the login screen, and log in with the iot_developer account you have created.
+1. Click user icon on the right corner of the screen, and switch tenant to **"IoT"**.
+1. Open the Discover page, adjust the time range of the target data appropriately, and display the data. You can see that the ip_address column is hashed as follows. This is because the ipaddress column was specified in the anonymized fields of iot_reader_role you have created earlier.
    ![document_anonymized](../images/document_anonymized.png)
-4. Also, when you open the Dashboards page, you can see that “Percentage of Status” is OK as shown below. This is because it was set to be able to view only that the status column has OK. Also, because the IP address is hashed, Private IP and other time sequence transitions are not displayed in the graph.
+1. Also, when you open the Dashboards page, you can see that “Percentage of Status” is OK as shown below. This is because it was set to be able to view only that the status column has OK. Also, because the IP address is hashed, Private IP and other time sequence transitions are not displayed in the graph.
    ![dashboard_filtered](../images/dashboard_filtered.png)
 
 Once you have completed this confirmation, log out of iot_reader, and then **log back in to Kibana as the master user created in Lab1**. It is mandatory to proceed with Section 2 or later.
@@ -110,22 +113,22 @@ The mechanism of alerts on Amazon ES as follows. In this example, you will monit
 
 First, set the destination of the action. Here, specify the SNS topic created in Lab 1 as the destination.
 
-1. Click ![kibana_alerm](../images/kibana_alerm.png) icon on the left of the screen to open the Alerting menu.
-2. Choose **[Destinations]** tab from the menu, and click **[Add destination]** button.
-3. Enter **"Amazon ES alert topic"** in **"Name"**. Choose **[Amazon SNS]** from the **"Type"** pull-down menu. Enter SNS topic you have created in Lab 1 and IAM role ARN to **"SNS Topic ARN"** and **"IAM role ARN"** in **"Settings"**.
+1. Choose **"Alerting"** item on the left of the screen to open the Alerting menu.
+1. Choose **[Destinations]** tab from the menu, and click **[Add destination]** button.
+1. Enter **"Amazon ES alert topic"** in **"Name"**. Choose **[Amazon SNS]** from the **"Type"** pull-down menu. Enter SNS topic you have created in Lab 1 and IAM role ARN to **"SNS Topic ARN"** and **"IAM role ARN"** in **"Settings"**.
    - **SNS Topic ARN**: The string should be look like `arn:aws:sns:ap-northeast-1:123456789012:amazon_es_alert`
    - **IAM role ARN**: The string should be look like `arn:aws:iam::123456789012:role/amazones_sns_alert_role`
-4. Click **[Create]** button.
+1. Click **[Create]** button.
 
 ### Monitor Settings
 
 Now, you will set the metrics and frequency for monitoring in the Monitor function. Here, you will count the number of FAIL in the status field in the log, once per minute.
 
-1. Click ![kibana_alerm](../images/kibana_alerm.png) icon on the left of the screen to open the security settings menu.
-2. Choose **[Monitors]** tab from the menu, and click **[Create monitor]** button on the right.
-3. After opening the Monitor creation screen, enter **"FAIL status monitor"** in **"Monitor name"**. Then, enter **"workshop-log-*"** in **"Index"** within **"Define monitor"**, and choose **[timestamp]** as **"Time field"**. Then, set `WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` to the query of  **"Create a monitor for"**. After setting it all, you can see as follows.
+1. Choose **"Alerting"** item on the left of the screen to open the Alerting menu.
+1. Choose **[Monitors]** tab from the menu, and click **[Create monitor]** button on the right.
+1. After opening the Monitor creation screen, enter **"FAIL status monitor"** in **"Monitor name"**. Then, enter **"workshop-log-*"** in **"Index"** within **"Define monitor"**, and choose **[timestamp]** as **"Time field"**. Then, set `WHEN count() OVER all documents FOR THE LAST 1 minute(s) WHERE status is FAIL ` to the query of  **"Create a monitor for"**. After setting it all, you can see as follows.
    ![monitor_setting](../images/monitor_setting.png)
-4. Click **[Create]** button to create a Monitor. After creating a Monitor, move to the Trigger creation screen.
+1. Click **[Create]** button to create a Monitor. After creating a Monitor, move to the Trigger creation screen.
 
 ### Trigger Settings
 
@@ -133,9 +136,9 @@ Now, you will set up Trigger. Here, you assume that you want to alert if there i
 
 1. Enter **"FAIL count trigger"** in **"Trigger name"**.Set **[3]** for **"Severity level"**. Then, set `IS ABOVE 1` in **"Trigger condition"**．This triggers the alert when it is raised more than 1, that is 2 times.
 
-2. Go to **"Configure actions"** at the bottom. Enter **"Too many FAIL notifications"** in **"Action name"**. From the “Destination” pull-down menu, choose **[Amazon ES alert topic - ( Amazon SNS)]** you have created. Then set **"The record number of FAIL status exceeds over that the threshold"** to **"Message subject"**.
+1. Go to **"Configure actions"** at the bottom. Enter **"Too many FAIL notifications"** in **"Action name"**. From the “Destination” pull-down menu, choose **[Amazon ES alert topic - ( Amazon SNS)]** you have created. Then set **"The record number of FAIL status exceeds over that the threshold"** to **"Message subject"**.
 
-3. Replace “Message” with the following content by deleting the first message.
+1. Replace “Message” with the following content by deleting the first message.
 
    ```
    An alert was detected on the monitor item {{ctx.monitor.name}}.Please check the status.
@@ -145,7 +148,7 @@ Now, you will set up Trigger. Here, you assume that you want to alert if there i
    - Aggregation end time: {{ctx.periodEnd}}
    ```
 
-4. Click **[Create]** button to create the Trigger.
+1. Click **[Create]** button to create the Trigger.
 
 Then, the setting for Trigger has been completed.
 
@@ -173,13 +176,13 @@ Amazon ES has Index State Management feature which enables sthe index management
 
 The JSON format configuration file describing the operation rules is called index policy in Amazon ES. You will create an index policy that automatically deletes the index in 7 days passed after the index is created.
 
-1. Click ![kibana_index_management](../images/kibana_index_management.png) icon on the left of the screen to open the Index Management menu.
+1. Choose **"Index Management"** item on the left of the screen to open the Index Management menu.
 
-2. Choose **[index policies]** menu from the left menu, and click **[Create policy]** button on the right.
+1. Choose **[State management policies]** menu from the left menu, and click **[Create policy]** button on the right.
 
-3. Enter **"delete_after_1week"** in **”Policy ID"**.
+1. Enter **"delete_after_1week"** in **”Policy ID"**.
 
-4. The default policy is already entered, but you will not use it at this time. Copy and paste the following contents into **"Define policy"**. The below are simple statements. It is self-descriptive and you should be able to understand the content.
+1. The default policy is already entered, but you will not use it at this time. Copy and paste the following contents into **"Define policy"**. The below are simple statements. It is self-descriptive and you should be able to understand the content.
 
    ```json
    {
@@ -217,25 +220,99 @@ The JSON format configuration file describing the operation rules is called inde
    }
    ```
 
-5. Click **[Create]** button to create the policy.
+1. Click **[Create]** button to create the policy.
 
 ### Apply Index policy to an existing index
 
 Now, you will apply the policy you created to an existing index.
 
 1. Choose **"Indices"** in the left menu. From the list of index, choose the index sucn as **[workshop-log-2020-04-01-09]** (the date part contains different values depending on the time of the workshop.), check the check box on the left, and then click **[Apply policy]** button on the top left.
-2. When the pop-up menu is displayed, choose  **"delete_after_1week"** you have created, and click **[Apply]** button.
-3. You can see the policy is applied to the index when choosing **[Managed Indices]** on the left menu.
+1. When the pop-up menu is displayed, choose  **"delete_after_1week"** you have created, and click **[Apply]** button.
+1. You can see the policy is applied to the index when choosing **[Policy managed indices]** on the left menu.
 
-### Apply Index policy to future indexes
-
+### Apply Index policy to future indexes (for Elasticsearch 7.10 or later)
 Using the method above, you can apply a policy to an existing index, but you cannot set it to a new policy in advance. It is hard to set this manually every time an index is created. So improve the configuration, so that the policy is automatically applied.
 
-To apply this configuration, you need to directly call the Elasticsearch API. You can use a UI called Dev Tools to call this API.
+1. Choose **"Index Management"** item on the left of the screen to open the Index Management menu.
+1. Choose **[State management policies]** menu from the left menu, and open **delete_after_1week** policy.
+1. Click **[Edit]** button at dialog.
+1. Update policy as follows. Difference is with **"ism_template"** section or without.
 
-1. Click ![kibana_devtools](../images/kibana_devtools.png) icon on the left of the screen to open the Dev tools menu.
+   ```json
+   {
+       "policy": {
+           "description": "Delete index 1 week after.",
+           "default_state": "live",
+           "states": [
+               {
+                   "name": "live",
+                   "actions": [
+                       {
+                           "read_write": {}
+                       }
+                   ],
+                   "transitions": [
+                       {
+                           "state_name": "delete",
+                           "conditions": {
+                               "min_index_age": "7d"
+                           }
+                       }
+                   ]
+               },
+               {
+                   "name": "delete",
+                   "actions": [
+                       {
+                           "delete": {}
+                       }
+                   ],
+                   "transitions": []
+               }
+           ],
+           "ism_template": {
+               "index_patterns": ["workshop-log-*"],
+               "priority": 100
+           }
+       }
+   }
+   ```
+1. A new index can only be created once an hour, so let's create a new index manually. Leave the contents of **"Console"** as it is, leave one line free to copy the following codes, and then click ▶︎ button.
 
-2. Leave the contents previously written in **"Console"** below, leave one line free, and copy the following codes below it. This means that **"delete_after_1week"** policy is applied automatically when it is created for all indexes applied to **"workshop-log-*"**.
+   ```json
+   POST workshop-log-policy-test/1
+   {
+     "id": "test"
+   }
+   ```
+
+1. To confirm that the policy is actually applied to the new index, copy the following codes, and then click ▶︎ button. You can also confirm it from **"Index Management"** screen. 
+
+   ```
+   GET _opendistro/_ism/explain/workshop-log-policy-test
+   ```
+  
+1. When the following are displayed, you have successfully applied a policy to a new index.
+
+   ```json
+   {
+       "workshop-log-policy-test" : {
+        "index.opendistro.index_state_management.policy_id" : "delete_after_1week",
+        "index" : "workshop-log-policy-test",
+        "index_uuid" : "xtMovQxUR7qlk0qToBodYw",
+        "policy_id" : "delete_after_1week",
+        "enabled" : true
+        },
+        "total_managed_indices" : 1
+   }
+   ```
+
+### Apply Index policy to future indexes (for Elasticsearch 7.9 or earlier)
+For Elasticsearch 7.9 or earlier, you need to call Elasticsearch API directly to apply this configuration. You can use a UI called Dev Tools to call this API.
+
+1. Choose **"Dev Tools"** item on the left of the screen.
+
+1. Leave the contents previously written in **"Console"** below, leave one line free, and copy the following codes below it. This means that **"delete_after_1week"** policy is applied automatically when it is created for all indexes applied to **"workshop-log-*"**.
 
    ```json
    PUT _template/index_policy_templete
@@ -247,7 +324,7 @@ To apply this configuration, you need to directly call the Elasticsearch API. Yo
    }
    ```
 
-3. Click ▶ ︎button on the right of the copied command, and execute the API. When the following result is displayed on the right screen, it is successful.
+1. Click ▶ ︎button on the right of the copied command, and execute the API. When the following result is displayed on the right screen, it is successful.
 
    ```json
    {
@@ -257,7 +334,7 @@ To apply this configuration, you need to directly call the Elasticsearch API. Yo
 
    ![console_put_templete](../images/console_put_templete.png)
 
-4. A new index can only be created once an hour, so let's create a new index manually. Leave the contents of **"Console"** as it is, leave one line free to copy the following codes, and then click ▶︎ button.
+1. A new index can only be created once an hour, so let's create a new index manually. Leave the contents of **"Console"** as it is, leave one line free to copy the following codes, and then click ▶︎ button.
 
    ```json
    POST workshop-log-policy-test/1
@@ -266,7 +343,7 @@ To apply this configuration, you need to directly call the Elasticsearch API. Yo
    }
    ```
 
-5. When the following are displayed, you have successfully created a new index.
+1. When the following are displayed, you have successfully created a new index.
 
    ```json
    {
@@ -286,9 +363,9 @@ To apply this configuration, you need to directly call the Elasticsearch API. Yo
 
    ```
 
-6. To confirm that the policy is actually applied to the new index, click ![kibana_index_management](../images/kibana_index_management.png) icon on the left of the screen to open the Index Management menu.
+1. To confirm that the policy is actually applied to the new index, open **"Index Management"** menu on the left of the screen to open the Index Management menu.
 
-7. When choosing **[Managed Indices]** from the left menu, you can confirm that the policy is applied to the index and it is in the Initializing status. This policy will be applied to newly created indexes with the **"workshop-log-*"** format from now on.
+1. When choosing **[Managed Indices]** from the left menu, you can confirm that the policy is applied to the index and it is in the Initializing status. This policy will be applied to newly created indexes with the **"workshop-log-*"** format from now on.
    ![index_auto_policy_attachment](../images/index_auto_policy_attachment.png)
 
 This concludes the description of managing index. In this time, very simple policy was created. You can actually set a wider range of policies. Please click [here](https://docs.aws.amazon.com/ja_jp/elasticsearch-service/latest/developerguide/ism.html) for more information.
