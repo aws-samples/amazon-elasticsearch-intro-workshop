@@ -497,7 +497,7 @@ Again, you will execute the API using Dev tools as before.
    {
      "query": """
    select
-     status.keyword
+     nested(status.keyword)
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
@@ -557,7 +557,7 @@ Again, you will execute the API using Dev tools as before.
    {
      "query": """
    select
-     status.keyword
+     nested(status.keyword)
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
@@ -588,7 +588,7 @@ Now, you know that you can execute queries in SQL. Then let's see what would be 
    {
      "query": """
    select
-     status.keyword
+     nested(status.keyword)
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
