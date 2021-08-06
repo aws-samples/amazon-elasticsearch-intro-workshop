@@ -691,7 +691,7 @@
    {
      "query": """
    select
-     status.keyword
+     nested(status.keyword)
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
@@ -751,7 +751,7 @@
    {
      "query": """
    select
-     status.keyword
+     nested(status.keyword)
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
@@ -782,7 +782,7 @@ SQL でクエリをかけることがわかりましたが，ではこの内容�
    {
      "query": """
    select
-     status.keyword
+     nested(status.keyword)
      , count(*) as cnt
      , avg(currentTemperature) as avgTemperature
    from
