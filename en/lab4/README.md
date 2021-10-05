@@ -369,11 +369,11 @@ To use synonym file in Amazon ES domain, you will upload the file to S3 and impo
 
 1. Download [synonym file](./custom_synonym.csv) to your local environment
 2. Open **[S3]** management console 
-3. Choose **"workshop-YYYYMMDD-YOURNAME"** created in Lab1 (replace YYYYMMDD and YOURNAME to appropriate one). Choose **[+ Create foloder]**, type **"package"**, and click **[Save]**
-4. Choose **"package"**, click **[Upload]**, select the synonym file downloaded before, and click **[Upoad]**
+3. Choose **"workshop-YYYYMMDD-YOURNAME"** created in Lab1 (replace YYYYMMDD and YOURNAME to appropriate one).
+4. Click **[Upload]**, select the synonym file downloaded before, and click **[Upload]**
 5. Open **[Elasticsearch Service]** management console 
 6. Choose **"package"**, then click **[Import]**
-7. Name **"custom-synonym"**, type **"s3://workshop-YYYYMMDD-YOURNAME/package/custom_synonym.csv"** as a package source, and click **[Import]**
+7. Name **"custom-synonym"**, type **"s3://workshop-YYYYMMDD-YOURNAME/custom-synonym.csv"** as a package source, and click **[Import]**
 8. After page transition, click **[Associate to a domain]**, choose "workshop-esdomain", then click  **[Associate]**
 9. Wait a few minutes till domain status will be available
 10. Make a note of ID like F123456789, as you will use it later
