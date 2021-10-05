@@ -370,7 +370,7 @@ To use synonym file in Amazon ES domain, you will upload the file to S3 and impo
 1. Download [synonym file](./custom_synonym.csv) to your local environment
 2. Open **[S3]** management console 
 3. Choose **"workshop-YYYYMMDD-YOURNAME"** created in Lab1 (replace YYYYMMDD and YOURNAME to appropriate one).
-4. Chlick **[Upload]**, select the synonym file downloaded before, and click **[Upoad]**
+4. Click **[Upload]**, select the synonym file downloaded before, and click **[Upoad]**
 5. Open **[Elasticsearch Service]** management console 
 6. Choose **"package"**, then click **[Import]**
 7. Name **"custom-synonym"**, type **"s3://workshop-YYYYMMDD-YOURNAME/custom-synonym.csv"** as a package source, and click **[Import]**
